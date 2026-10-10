@@ -1,0 +1,24 @@
+// Copiar a config.h (y NO subirlo a ningún repositorio).
+#pragma once
+
+// --- WiFi (el ESP32 solo soporta 2.4 GHz) ---
+#define WIFI_SSID      "TU_SSID"
+#define WIFI_PASSWORD  "TU_CLAVE"
+
+// --- API (IP de la EC2 / Elastic IP / DNS). Cambia en cada sesión si no usas Elastic IP ---
+#define API_HOST       "0.0.0.0"
+#define API_PORT       8000
+#define API_KEY        "CAMBIAR"
+#define USE_HTTPS      0          // 1 = WiFiClientSecure (setInsecure() solo para pruebas)
+
+// --- Identidad y periodo ---
+#define DEVICE_ID      "esp32-01"
+#define UBICACION      "Laboratorio"
+#define FW_VERSION     "1.0.0"
+#define INTERVALO_MS   10000UL    // periodo de muestreo
+#define HTTP_TIMEOUT_MS 5000
+
+// --- Sensor ---
+#define USE_DHT        0          // 0 = valores simulados (sin hardware), 1 = DHT real
+#define DHT_PIN        4
+#define DHT_TYPE       DHT22      // DHT11 o DHT22

@@ -1,0 +1,18 @@
+# Secretos
+.env
+config.h
+
+# Python / pruebas
+.venv/
+__pycache__/
+.pytest_cache/
+*.db
+
+# Docker / despliegue
+deploy/.env
+*.pid
+
+# Editor / sistema
+.vscode/
+.idea/
+.DS_Store

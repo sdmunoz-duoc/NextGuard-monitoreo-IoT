@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark"><title>Diagramas del plan</title><style>
+:root{--bg:#f7f7f4;--fg:#1c232b;--muted:#5a6673;--line:#c8ced6;--box:#ffffff;--zone:#eef1f5;
+--acc:#0b6bcb;--acc-soft:#dcebfb;--ok:#1a7f4b;--warn:#a85a00;--bad:#b42318;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#12161b;--fg:#e6eaee;--muted:#9aa6b2;--line:#3a444f;--box:#1b2129;
+--zone:#171c22;--acc:#5aa9ff;--acc-soft:#1c3552;--ok:#4cc38a;--warn:#f0a35e;--bad:#ff7b72;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
+nav{font-size:14px;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px 16px}
+nav a{color:var(--acc);text-decoration:none}nav a:hover{text-decoration:underline}
+nav a[aria-current]{color:var(--fg);font-weight:600;text-decoration:none}
+h1{font-size:1.5rem;line-height:1.25;margin:0 0 6px}
+p.lead{color:var(--muted);margin:0 0 20px;max-width:75ch}
+figure{margin:0}
+.fig{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--box);padding:8px}
+.fig svg{display:block;width:100%;min-width:760px;height:auto}
+figcaption{color:var(--muted);font-size:14px;margin:10px 2px 0;max-width:85ch}
+ul.notes{margin:20px 0 0;padding-left:20px;max-width:85ch}ul.notes li{margin:6px 0}
+code{font:0.9em ui-monospace,Menlo,Consolas,monospace;background:var(--zone);padding:1px 5px;border-radius:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:8px}
+.card{display:block;border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--box);color:inherit;text-decoration:none}
+.card:hover{border-color:var(--acc)}.card h2{font-size:1.05rem;margin:0 0 4px;color:var(--acc)}
+.card p{margin:0;color:var(--muted);font-size:14px}
+/* SVG */
+svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.box{fill:var(--box);stroke:var(--fg);stroke-width:1.4}
+.box.acc{stroke:var(--acc);stroke-width:2}.box.tool{stroke:var(--muted);stroke-dasharray:5 3}
+.f-ok{fill:var(--box);stroke:var(--ok);stroke-width:1.6;stroke-dasharray:6 4}
+.f-warn{fill:var(--box);stroke:var(--warn);stroke-width:1.6;stroke-dasharray:6 4}
+.f-bad{fill:var(--box);stroke:var(--bad);stroke-width:1.6;stroke-dasharray:6 4}
+.zone{fill:var(--zone);stroke:var(--line);stroke-width:1.4;stroke-dasharray:7 4}
+.sg{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 3}
+.bar{fill:var(--acc-soft);stroke:var(--acc);stroke-width:1.5}.bar.soft{fill:none;stroke-dasharray:6 4}
+.guide{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+.edge{fill:none;stroke:var(--fg);stroke-width:1.6}.edge.dash{stroke-dasharray:6 4}.plain{fill:none;stroke:var(--muted);stroke-width:1.2}
+.e-ok{stroke:var(--ok)}.e-bad{stroke:var(--bad)}.e-warn{stroke:var(--warn)}.e-acc{stroke:var(--acc)}
+.mk{fill:var(--fg)}.mk-ok{fill:var(--ok)}.mk-bad{fill:var(--bad)}.mk-warn{fill:var(--warn)}.mk-acc{fill:var(--acc)}
+.life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
+.frame{fill:none;stroke:var(--line);stroke-width:1.2}.tab{fill:var(--zone);stroke:var(--line);stroke-width:1.2}
+.badge{stroke-width:1.6}.b-acc{fill:var(--acc);stroke:var(--acc)}.b-bad{fill:var(--bad);stroke:var(--bad)}
+.b-ok{fill:var(--ok);stroke:var(--ok)}.b-warn{fill:var(--warn);stroke:var(--warn)}
+.xmark{stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round}
+.t{fill:var(--fg);font-size:12px}.tb{fill:var(--fg);font-size:13px;font-weight:600}.ts{fill:var(--muted);font-size:11px}
+.tz{fill:var(--muted);font-size:11px;font-weight:700;letter-spacing:.06em}.tm{fill:var(--muted);font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.tbadge{fill:#fff;font-size:11px;font-weight:700}.tk-ok{fill:var(--ok);font-size:11px;font-weight:700;letter-spacing:.05em}
+.tk-warn{fill:var(--warn);font-size:11px;font-weight:700;letter-spacing:.05em}.tk-bad{fill:var(--bad);font-size:11px;font-weight:700;letter-spacing:.05em}
+.tacc{fill:var(--acc);font-size:12px;font-weight:600}.tbad{fill:var(--bad);font-size:12px;font-weight:600}.tokk{fill:var(--ok);font-size:12px;font-weight:600}
+</style></head>
+<body><main><nav><a href="index.html" aria-current="page">Índice</a></nav>
+<h1>Diagramas del plan de integración</h1>
+<p class="lead">ESP32 → API Python → PostgreSQL → Grafana, en contenedores Docker sobre una EC2 (AWS Learner Lab). Cada página contiene un diagrama y las notas para leerlo.</p>
+<div class="cards"><a class="card" href="arquitectura.html"><h2>Arquitectura bajo prueba</h2><p>Componentes, red y qué tramo cubre cada nivel.</p></a><a class="card" href="flujo_datos.html"><h2>Recorrido de una lectura</h2><p>Siete pasos y qué pasa cuando algo falla en cada uno.</p></a><a class="card" href="secuencia_pruebas.html"><h2>Secuencia de las pruebas</h2><p>Camino feliz, duplicado, 401, caída y verificación.</p></a><a class="card" href="despliegue_aws.html"><h2>Despliegue en AWS</h2><p>Una EC2 con tres contenedores, Security Group y reglas de entrada.</p></a><a class="card" href="estrategia_niveles.html"><h2>Niveles de prueba</h2><p>N0 a N6, componentes que integra cada uno y conteo de casos.</p></a></div></main></body></html>

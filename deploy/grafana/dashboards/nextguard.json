@@ -1,0 +1,297 @@
+{
+  "uid": "nextguard-main",
+  "title": "NextGuard · Monitoreo IoT",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "tags": [
+    "nextguard"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Dispositivos activos (15 min)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "nextguard-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "nextguard-pg"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT count(DISTINCT dispositivo_id) AS value FROM lectura WHERE ts_servidor > now() - interval '15 minutes'"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Lecturas en el rango",
+      "datasource": {
+        "type": "postgres",
+        "uid": "nextguard-pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "nextguard-pg"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT count(*) AS value FROM lectura WHERE $__timeFilter(ts_servidor)"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Última lectura (hace)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "nextguard-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "nextguard-pg"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT extract(epoch FROM now()-max(ts_servidor)) AS value FROM lectura"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Dispositivos registrados",
+      "datasource": {
+        "type": "postgres",
+        "uid": "nextguard-pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "nextguard-pg"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT count(*) AS value FROM dispositivo"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Temperatura",
+      "datasource": {
+        "type": "postgres",
+        "uid": "nextguard-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "nextguard-pg"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(l.ts_servidor, $__interval), d.device_id AS metric, avg(m.valor) AS value\nFROM medicion m JOIN lectura l ON l.id=m.lectura_id JOIN dispositivo d ON d.id=l.dispositivo_id\nWHERE $__timeFilter(l.ts_servidor) AND m.magnitud='temperatura' AND d.device_id IN ($device)\nGROUP BY 1,2 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Humedad",
+      "datasource": {
+        "type": "postgres",
+        "uid": "nextguard-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "humidity"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "nextguard-pg"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(l.ts_servidor, $__interval), d.device_id AS metric, avg(m.valor) AS value\nFROM medicion m JOIN lectura l ON l.id=m.lectura_id JOIN dispositivo d ON d.id=l.dispositivo_id\nWHERE $__timeFilter(l.ts_servidor) AND m.magnitud='humedad' AND d.device_id IN ($device)\nGROUP BY 1,2 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Dispositivos sin reportar (> 10 min)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "nextguard-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "nextguard-pg"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT d.device_id, d.ubicacion, max(l.ts_servidor) AS ultima_lectura FROM dispositivo d LEFT JOIN lectura l ON l.dispositivo_id=d.id GROUP BY d.id HAVING max(l.ts_servidor) IS NULL OR max(l.ts_servidor) < now() - interval '10 minutes' ORDER BY 3"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Lecturas por minuto",
+      "datasource": {
+        "type": "postgres",
+        "uid": "nextguard-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "postgres",
+            "uid": "nextguard-pg"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT $__timeGroupAlias(ts_servidor, '1m'), count(*) AS lecturas FROM lectura WHERE $__timeFilter(ts_servidor) GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "device",
+        "label": "Dispositivo",
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "nextguard-pg"
+        },
+        "multi": true,
+        "includeAll": true,
+        "query": "SELECT device_id FROM dispositivo ORDER BY 1",
+        "refresh": 1,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  }
+}
