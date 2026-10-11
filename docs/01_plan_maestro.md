@@ -134,9 +134,9 @@ La matriz completa requisito ↔ caso está en `02_casos_de_prueba.md` y en la h
 
 | Recurso | Configuración propuesta | Observaciones |
 |---|---|---|
-| EC2 | Amazon Linux 2023, **`t3.medium`** (4 GB) como base; **`t3.large`** (8 GB) si se añaden servicios o para la carga IT-NFR-04. SG `sg-nextguard` (22 y 3000 solo «Mi IP», 8000 abierto al ESP32) | Ejecuta `docker compose` con los contenedores `api`, `db` y `grafana`; **Elastic IP** si está permitida. Límites de memoria en compose: db 1 GB, api 512 MB, grafana 512 MB |
+| EC2 | Amazon Linux 2023, **`t3.medium`** (4 GB) como base; **`t3.large`** (8 GB) si se añaden servicios o para la carga IT-NFR-04. SG `nextguard-sg` (22 y 3000 solo «Mi IP», 8000 abierto al ESP32) | Ejecuta `docker compose` con los contenedores `api`, `db` y `grafana`; **Elastic IP** si está permitida. Límites de memoria en compose: db 1 GB, api 512 MB, grafana 512 MB |
 | PostgreSQL | Contenedor `postgres:16`, volumen `pgdata`, sin puertos publicados | Base `sensores`, usuario `sensores_app` y rol `grafana_ro` (solo lectura) |
-| Security Group | `sg-nextguard` | Sin regla para el puerto 5432 |
+| Security Group | `nextguard-sg` | Sin regla para el puerto 5432 |
 | IAM | `LabRole` / `LabInstanceProfile` | No se pueden crear roles propios |
 
 La guía paso a paso está en `docs/deploy_ec2.md`.

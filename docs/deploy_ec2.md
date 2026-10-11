@@ -11,7 +11,7 @@ Todo el sistema corre en **una sola instancia EC2**, con un contenedor por servi
 > El Learner Lab cambia entre cursos y sesiones: verifica en la consola de EC2 qué tipos de instancia están permitidos. Región habitual: `us-east-1`.
 
 ## 1. Seguridad de red
-Crea el Security Group `sg-nextguard`:
+Crea el Security Group `nextguard-sg` (AWS no admite nombres que empiecen por `sg-`):
 
 | Puerto | Origen | Motivo |
 |---|---|---|
@@ -22,7 +22,7 @@ Crea el Security Group `sg-nextguard`:
 
 ## 2. Instancia EC2
 1. Lanza **t3.medium** (4 GB) con Amazon Linux 2023. Usa **t3.large** (8 GB) si añades servicios (p. ej. Prometheus/Loki) o vas a hacer las pruebas de carga `IT-NFR-04`. Disco de 20 GB gp3.
-2. SG `sg-nextguard`, par de claves del laboratorio (`vockey`).
+2. SG `nextguard-sg`, par de claves del laboratorio (`vockey`).
 3. Asocia una **Elastic IP** si está permitida (si no, la IP cambia en cada sesión y hay que actualizar `API_HOST` en el firmware).
 
 ## 3. Instalar Docker

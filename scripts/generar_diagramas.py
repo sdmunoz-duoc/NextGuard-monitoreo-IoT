@@ -139,7 +139,7 @@ def arquitectura():
     s.rect(530, 50, 514, 360, "zone")
     s.text(546, 72, "AWS LEARNER LAB · VPC", "tz", "start")
     s.rect(538, 86, 494, 304, "sg")
-    s.text(552, 104, "EC2 · t3.medium · docker compose · sg-nextguard", "tz", "start")
+    s.text(552, 104, "EC2 · t3.medium · docker compose · nextguard-sg", "tz", "start")
 
     s.box(36, 140, 100, 60, "Sensor DHT", ["11 / 22"])
     s.box(180, 140, 130, 60, "ESP32", ["cola · NTP · reintentos"], "box acc")
@@ -348,7 +348,7 @@ def despliegue():
     s.rect(320, 50, 720, 330, "zone")
     s.text(336, 72, "VPC DEL LABORATORIO · us-east-1 / us-west-2", "tz", "start")
     s.rect(350, 90, 670, 230, "sg")
-    s.text(364, 108, "sg-nextguard · EC2 t3.medium (t3.large si se añaden servicios) · Amazon Linux 2023 · docker compose", "tz", "start")
+    s.text(364, 108, "nextguard-sg · EC2 t3.medium (t3.large si se añaden servicios) · Amazon Linux 2023 · docker compose", "tz", "start")
 
     s.box(372, 130, 190, 100, "api", ["FastAPI · uvicorn", "TCP 8000 · 512 MB"], "box acc")
     s.box(592, 130, 190, 100, "grafana", ["grafana-oss :3000", "datasource PostgreSQL"], "box acc")
@@ -356,7 +356,7 @@ def despliegue():
     s.line([(562, 180), (592, 180)], arrow=False)
     s.line([(782, 180), (812, 180)], arrow=False)
     s.text(710, 262, "red «backend»: api y grafana resuelven db:5432", "ts", "start")
-    s.box(372, 276, 190, 36, "Elastic IP", [], "box")
+    s.box(372, 270, 190, 44, "Elastic IP", ["asociada a la instancia"], "box")
 
     s.line([(220, 140), (372, 140)], "ok")
     s.text(290, 132, "TCP 8000", "ts")
@@ -372,8 +372,8 @@ def despliegue():
 
     s.rect(20, 410, 1020, 90, "box")
     s.text(36, 430, "REGLAS DE ENTRADA", "tz", "start")
-    s.text(36, 450, "sg-nextguard  ←  TCP 8000  desde 0.0.0.0/0 (o solo la IP pública de tu WiFi, más estricto)  ·  TCP 3000  solo desde «Mi IP»", "t", "start")
-    s.text(36, 468, "sg-nextguard  ←  TCP 22  solo desde «Mi IP»", "t", "start")
+    s.text(36, 450, "nextguard-sg  ←  TCP 8000  desde 0.0.0.0/0 (o solo la IP pública de tu WiFi, más estricto)  ·  TCP 3000  solo desde «Mi IP» (/32)", "t", "start")
+    s.text(36, 468, "nextguard-sg  ←  TCP 22  solo desde «Mi IP» (/32); si tu IP pública cambia, actualiza las reglas 22 y 3000", "t", "start")
     s.text(36, 486, "TCP 5432  sin regla de entrada y sin puerto publicado en compose: solo existe dentro de la red docker", "t", "start")
 
     pagina("despliegue_aws.html", "Despliegue en AWS",
@@ -382,8 +382,8 @@ def despliegue():
            "Flechas verdes = conexiones permitidas. La línea roja discontinua es la que debe rechazarse: PostgreSQL no publica su puerto y el "
            "Security Group no tiene regla para 5432.",
            ["La sesión del laboratorio dura unas 4 h: al terminar, la EC2 se detiene. Sin Elastic IP, la IP pública cambia y hay que actualizar <code>API_HOST</code> en <code>config.h</code>. "
-            "Los contenedores usan <code>restart: unless-stopped</code> y los datos viven en volúmenes nombrados, así que el stack vuelve solo al iniciar la EC2.",
-            "Detén la EC2 al cerrar cada sesión para no consumir presupuesto. Los tipos de instancia disponibles pueden variar por laboratorio: verifica en S1 que t3.medium esté permitido.",
+            "Los contenedores usan <code>restart: unless-stopped</code> y los datos viven en volúmenes nombrados, así que el stack vuelve solo al iniciar la EC2: el reinicio de la instancia ya se probó (IT-ENV-05, IT-ENV-08, IT-NFR-07).",
+            "Detén la EC2 al cerrar cada sesión para no consumir presupuesto. Con el Elastic IP asociado, la IP de la API no cambia entre reinicios; los tipos de instancia disponibles pueden variar por laboratorio.",
             "Pasos de creación y comprobación en <code>docs/deploy_ec2.md</code> y <code>scripts/smoke_env.sh</code> (incluye <code>--externo</code> para el caso rojo)."])
 
 
