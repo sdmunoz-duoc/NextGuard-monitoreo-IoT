@@ -1,56 +1,84 @@
 # NextGuard · Monitoreo IoT
 
-Red de sensores ambientales: **ESP32 + DHT11/22 → API FastAPI → PostgreSQL → Grafana**, desplegada en una sola instancia EC2 (AWS Learner Lab) con un contenedor Docker por servicio. Incluye el plan de pruebas de integración completo (75 casos, 33 pruebas automatizadas).
+Red de sensores ambientales: **ESP32 (DHT11 + MQ135) → API FastAPI → InfluxDB + PostgreSQL → Grafana**, desplegada en una sola instancia EC2 (AWS Learner Lab) con un contenedor Docker por servicio. Sigue la arquitectura de la clase «Del sensor a Grafana» (SIY6122) e incluye el plan de pruebas de integración completo (104 casos, 52 pruebas automatizadas).
 
 ```
-Sensor DHT ─► ESP32 ── WiFi ──► Internet ──► EC2 (docker compose)
-                                              ├─ api      FastAPI :8000
-                                              ├─ db       PostgreSQL 16 (sin puertos publicados)
-                                              └─ grafana  :3000  (usuario de solo lectura en la BD)
+Sensores ─► ESP32 ── WiFi ──► Internet ──► EC2 (docker compose)
+ DHT11      portal cautivo                  ├─ api       FastAPI :8000 ──► influxdb 2.7 (lecturas)
+ MQ135      cola · NTP · reintentos         │                           └► postgres 16 (clientes, sensores, alertas)
+                                            └─ grafana   :3000  ── token de solo lectura ──► influxdb
 ```
+
+Las bases de datos no publican puertos: solo la API (:8000) y Grafana (:3000) se exponen.
 
 ## Estructura
 
-| Carpeta | Contenido |
+| Ruta | Contenido |
 |---|---|
-| `firmware/esp32_envio/` | Sketch de envío (cola en RAM, NTP, reintentos). Copiar `config.h.example` a `config.h` |
-| `firmware/wifi_diagnostico/` | Escaneo WiFi y motivo de desconexión. Copiar `config.h.example` a `config.h` |
+| `docker-compose.yml`, `.env.example` | Stack completo (copiar `.env.example` a `.env`) |
 | `api/` | API FastAPI y `Dockerfile` |
-| `db/` | `schema.sql` y `02-roles.sh` (rol `grafana_ro`) |
-| `deploy/` | `docker-compose.yml`, `.env.example` y dashboards de Grafana aprovisionados |
-| `tests/` | Suite pytest (contrato, BD, seguridad, carga ligera) |
+| `db/` | `init.sql` (PostgreSQL) e `influx-init.sh` (tokens de InfluxDB con privilegios mínimos) |
+| `grafana/` | Datasource InfluxDB (Flux) y dashboard «NextGuard · Monitoreo IoT» aprovisionados |
+| `firmware/esp32_envio/` | Sketch de envío: portal cautivo, DHT11, MQ135, cola y reintentos (`config.h.example`) |
+| `firmware/wifi_diagnostico/` | Escaneo WiFi y motivo de desconexión |
+| `tests/` | Suite pytest (contrato, validaciones, idempotencia, seguridad, carga ligera, integración con InfluxDB) |
 | `scripts/` | Simulador de sensores, prueba de humo y generadores de documentos |
-| `docs/` | Plan maestro, casos de prueba (.md/.pdf/.xlsx), guía de despliegue y `diagramas/` (HTML + PDF) |
+| `docs/` | Plan maestro, casos de prueba (.md/.pdf/.xlsx), guía de despliegue, colección Postman y `diagramas/` (HTML + PDF, incluye el Gantt) |
 
-## Empezar con Docker
+## Levantar el stack en tres comandos
 
 ```bash
-cd deploy
 cp .env.example .env          # edita contraseñas y API_KEYS
 docker compose up -d --build
-docker compose ps             # api y db: healthy
+docker compose ps             # api, influxdb y postgres: healthy
 ```
 
 - API: <http://localhost:8000/health>
 - Grafana: <http://localhost:3000> (usuario y clave de `.env`), dashboard **NextGuard · Monitoreo IoT**
 
-Genera datos de prueba:
+Registra un cliente y genera datos de prueba:
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-python scripts/simulador_sensor.py --url http://localhost:8000 --api-key <API_KEYS> --devices 3 --count 50 --verify
+curl -X POST localhost:8000/clientes -H "Content-Type: application/json" -H "X-API-Key: <API_KEYS>" \
+  -d '{"id_cliente": "cliente-001", "nombre": "Mi cliente"}'
+python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt
+python scripts/simulador_sensor.py --url http://localhost:8000 --api-key <API_KEYS> --devices 3 --count 50 --with-mq --verify
 ```
 
 Despliegue en AWS: [`docs/deploy_ec2.md`](docs/deploy_ec2.md) (t3.medium como base, t3.large si se añaden servicios).
 
+## API
+
+| Método y ruta | Uso |
+|---|---|
+| `POST /api/v1/lecturas` | Una lectura `{sensor, cliente, ubicacion, tipo, valor, unidad}` o con `mediciones[]`, `seq`, `timestamp` |
+| `POST /api/v1/lecturas/batch` | Hasta 100 lecturas |
+| `GET /api/v1/lecturas` | Consulta por `cliente`, `sensor`, `desde`, `hasta`, `limit` |
+| `POST /clientes` · `GET /clientes` · `GET /clientes/{id}` | Gestión de clientes |
+| `GET /clientes/{id}/sensores` · `GET /clientes/{id}/sensores/{sensor}/lecturas` | Sensores (con última lectura) y sus lecturas |
+| `GET /health` | Estado de la API, PostgreSQL e InfluxDB |
+
+Todos (salvo `/health`) exigen la cabecera `X-API-Key`. Códigos: `201` guardada · `200` duplicada · `401` clave · `403` cliente/sensor no registrado · `404` · `409` · `413` · `422` formato, rango físico o fecha futura · `503` base no disponible. La colección de Postman está en `docs/postman/`.
+
+## ESP32
+
+Al primer encendido crea la red `SENSOR-XXXX`; abre `http://192.168.4.1` y completa WiFi, servidor, API key, cliente, sensor, ubicación y ciclo (se guardan en la flash). Mantén **BOOT** 3 s al encender para restablecer. Compilar:
+
+```bash
+cp firmware/esp32_envio/config.h.example firmware/esp32_envio/config.h   # opciones de sensores (USE_DHT, USE_MQ135)
+arduino-cli lib install WiFiManager "DHT sensor library" "Adafruit Unified Sensor"
+arduino-cli compile --fqbn esp32:esp32:esp32 firmware/esp32_envio
+```
+
+MQ135: la salida analógica va a **GPIO34 a través de un divisor de tensión** (p. ej. 10 kΩ/20 kΩ) y el módulo se alimenta a 5 V; nunca conectes AO directo a un GPIO.
+
 ## Pruebas
 
 ```bash
-pytest                # 33 pruebas contra SQLite, sin Docker ni AWS
+pytest                # 49 pruebas con almacenamiento en memoria y SQLite (sin Docker ni AWS)
 ```
 
-Los casos se editan **solo** en `scripts/casos_de_prueba.py`; después:
+Con el stack levantado se pueden correr las 52 pruebas contra PostgreSQL e InfluxDB reales (ver `docs/01_plan_maestro.md`, §6). Los casos se editan **solo** en `scripts/casos_de_prueba.py`; después:
 
 ```bash
 python scripts/generar_documentos.py   # docs/02_casos_de_prueba.md, .csv y .xlsx (sobrescribe el .xlsx)
@@ -61,15 +89,15 @@ python scripts/build_pdf.py            # PDFs del plan, de los casos y de cada d
 ## Documentación
 
 - [Plan maestro](docs/01_plan_maestro.pdf) · [Casos de prueba](docs/02_casos_de_prueba.pdf) · [Matriz de ejecución](docs/casos_de_prueba.xlsx)
-- Diagramas: [arquitectura](docs/diagramas/arquitectura.pdf), [flujo de datos](docs/diagramas/flujo_datos.pdf), [secuencia](docs/diagramas/secuencia_pruebas.pdf), [despliegue](docs/diagramas/despliegue_aws.pdf), [niveles](docs/diagramas/estrategia_niveles.pdf)
+- Diagramas: [arquitectura](docs/diagramas/arquitectura.pdf), [flujo de datos](docs/diagramas/flujo_datos.pdf), [secuencia](docs/diagramas/secuencia_pruebas.pdf), [despliegue](docs/diagramas/despliegue_aws.pdf), [niveles](docs/diagramas/estrategia_niveles.pdf), [Gantt](docs/diagramas/gantt.pdf)
 
 ## Seguridad
 
-Este repositorio es público: `config.h` y `.env` están en `.gitignore` y no deben subirse nunca. Rota cualquier clave WiFi o API key que se haya compartido fuera de un gestor de secretos.
+Este repositorio es público: `config.h` y `.env` están en `.gitignore` y no deben subirse nunca. Los tokens de InfluxDB se crean al inicializar el volumen y quedan fuera del repositorio; el de Grafana es de solo lectura. Rota cualquier clave WiFi o API key que se haya compartido fuera de un gestor de secretos.
 
 ## Estado
 
-Ver §10 del plan maestro. Verificado en local: pytest, stack Docker completo, simulador con verificación y consultas del dashboard. Pendiente: compilar el firmware, despliegue en la EC2 y pruebas con hardware (sesiones S1–S7).
+Ver §10 del plan maestro. Verificado en local: pruebas contra servicios reales, stack Docker completo, dashboard en Flux, token de solo lectura, simulador, Postman y compilación del firmware. Pendiente: despliegue de esta versión en la EC2 y pruebas con hardware (sesiones S1–S7).
 
 ## Licencia
 
