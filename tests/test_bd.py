@@ -33,10 +33,10 @@ def test_it_db_03_mismo_seq_en_sensores_distintos_es_valido(client):
 
 def test_it_db_04_nueva_magnitud_sin_cambiar_esquema(client):
     p = payload(seq=1)
-    p["mediciones"].append({"tipo": "calidad_aire_mv", "valor": 840.0, "unidad": "mV"})
+    p["mediciones"].append({"tipo": "co2_equiv", "valor": 840.0, "unidad": "ppm"})
     assert client.post(URL, json=p).status_code == 201
     tipos = {m["tipo"] for m in client.get(URL).json()[0]["mediciones"]}
-    assert tipos == {"temperatura", "humedad", "calidad_aire_mv"}
+    assert tipos == {"temperatura", "humedad", "co2_equiv"}
 
 
 def test_it_db_05_borrar_cliente_elimina_sensores_y_marcas_en_cascada(client):

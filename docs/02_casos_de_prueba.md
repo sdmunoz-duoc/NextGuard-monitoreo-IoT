@@ -210,7 +210,7 @@
   1. Encender y observar el monitor serie 5 min
   2. Dejar 10 min más en aire limpio
 - **Datos:** MQ135_PRECALENTAMIENTO_MS = 180000
-- **Resultado esperado:** Durante los primeros 3 min solo se envían T y H; después se envían `calidad_aire_mv` y `calidad_aire_raw`; variación < 5 % en aire limpio estable.
+- **Resultado esperado:** Durante los primeros 3 min solo se envían T y H; después se envían `co2_equiv` (ppm) y `calidad_aire_raw`; variación < 5 % en aire limpio estable.
 
 ### IT-SEN-09 — Falla del DHT no bloquea la lectura del MQ135
 
@@ -231,7 +231,7 @@
   1. Cargar firmware
   2. Observar 20 muestras
 - **Datos:** —
-- **Resultado esperado:** `calidad_aire_mv` entre 300 y 2500 con variación ≤ 25 mV por muestra.
+- **Resultado esperado:** `co2_equiv` entre 400 y 2000 ppm con variación ≤ 25 ppm por muestra.
 
 
 ## N2 — ESP32 ↔ Red WiFi / NTP
@@ -610,16 +610,16 @@
 - **Resultado esperado:** 422.
 - **Automatización:** `tests/test_api_contrato.py::test_it_api_28_simple_y_mediciones_a_la_vez_422`
 
-### IT-API-29 — Rango del MQ135 en mV (0 a 3300)
+### IT-API-29 — Rango del MQ135 en ppm (300 a 10000)
 
 - **Requisito:** RF-11 · **Prioridad:** Alta · **Tipo:** Automatizado (pytest)
 - **Precondiciones:** —
 - **Pasos:**
-  1. POST calidad_aire_mv=1200
-  2. POST calidad_aire_mv=3301
+  1. POST co2_equiv=520
+  2. POST co2_equiv=10001
 - **Datos:** —
 - **Resultado esperado:** 201 y 422 respectivamente.
-- **Automatización:** `tests/test_api_contrato.py::test_it_api_29_rango_del_mq135_en_mv`
+- **Automatización:** `tests/test_api_contrato.py::test_it_api_29_rango_del_mq135_en_ppm`
 
 ### IT-API-30 — Clientes: crear, repetir (409) y listar
 
@@ -692,9 +692,9 @@
 - **Requisito:** RF-07 · **Prioridad:** Alta · **Tipo:** Automatizado (pytest)
 - **Precondiciones:** —
 - **Pasos:**
-  1. POST con calidad_aire_mv además de T/H
+  1. POST con co2_equiv además de T/H
   2. GET
-- **Datos:** calidad_aire_mv=840
+- **Datos:** co2_equiv=840
 - **Resultado esperado:** Las 3 magnitudes se guardan y se consultan sin migrar nada.
 - **Automatización:** `tests/test_bd.py::test_it_db_04_nueva_magnitud_sin_cambiar_esquema`
 
@@ -916,7 +916,7 @@
 - **Precondiciones:** API en EC2.
 - **Pasos:**
   1. python simulador_sensor.py --with-pm --with-mq --devices 1 --count 10 --verify
-- **Datos:** pm2_5, calidad_aire_mv
+- **Datos:** pm2_5, co2_equiv
 - **Resultado esperado:** Se guardan y se consultan sin migrar el esquema.
 - **Automatización:** `scripts/simulador_sensor.py`
 

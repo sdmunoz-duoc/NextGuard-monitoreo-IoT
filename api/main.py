@@ -30,7 +30,8 @@ from store import Store, StoreError, crear_store  # noqa: E402
 RANGOS = {
     "temperatura": (-40.0, 80.0),        # DHT11/DHT22
     "humedad": (0.0, 100.0),
-    "calidad_aire_mv": (0.0, 3300.0),    # MQ135 tras el divisor de tensión
+    "co2_equiv": (300.0, 10000.0),       # MQ135 convertido a ppm de CO2 equivalente
+    "calidad_aire_mv": (0.0, 3300.0),    # MQ135 tras el divisor de tensión (diagnóstico)
     "calidad_aire_raw": (0.0, 4095.0),   # ADC de 12 bits
 }
 MAX_FUTURO = timedelta(minutes=5)         # desfase de reloj tolerado en 'timestamp'

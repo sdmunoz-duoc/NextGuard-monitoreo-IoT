@@ -34,7 +34,7 @@ class Dispositivo:
         self.seq = 0
         self.temp = random.uniform(18, 26)
         self.hum = random.uniform(40, 60)
-        self.mq = random.uniform(600, 1200)
+        self.mq = random.uniform(450, 700)       # CO2 equivalente (ppm)
         self.con_pm = con_pm
         self.con_mq = con_mq
 
@@ -46,8 +46,8 @@ class Dispositivo:
             {"tipo": "humedad", "valor": round(self.hum, 1), "unidad": "%"},
         ]
         if self.con_mq:
-            self.mq = min(3300.0, max(0.0, self.mq + random.uniform(-25, 25)))
-            med.append({"tipo": "calidad_aire_mv", "valor": round(self.mq, 0), "unidad": "mV"})
+            self.mq = min(10000.0, max(300.0, self.mq + random.uniform(-15, 15)))
+            med.append({"tipo": "co2_equiv", "valor": round(self.mq, 0), "unidad": "ppm"})
         if self.con_pm:
             med.append({"tipo": "pm2_5", "valor": round(max(0, random.gauss(12, 4)), 1), "unidad": "ug/m3"})
         p = {
@@ -169,7 +169,7 @@ def main() -> int:
     ap.add_argument("--dup-rate", type=float, default=0.0, help="probabilidad de reenviar el mismo seq")
     ap.add_argument("--bad-rate", type=float, default=0.0, help="probabilidad de enviar un payload inválido / clave errónea")
     ap.add_argument("--with-pm", action="store_true", help="incluye pm2_5 (prueba de nuevo sensor)")
-    ap.add_argument("--with-mq", action="store_true", help="incluye calidad_aire_mv (MQ135)")
+    ap.add_argument("--with-mq", action="store_true", help="incluye co2_equiv en ppm (MQ135)")
     ap.add_argument("--parallel", action="store_true", help="un hilo por dispositivo")
     ap.add_argument("--timeout", type=float, default=5.0)
     ap.add_argument("--verify", action="store_true", help="consulta la API y compara con lo enviado")

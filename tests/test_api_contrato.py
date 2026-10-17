@@ -146,9 +146,9 @@ def test_it_api_28_simple_y_mediciones_a_la_vez_422(client):
     assert client.post(URL, json=simple(tipo=None)).status_code == 422
 
 
-def test_it_api_29_rango_del_mq135_en_mv(client):
-    ok = simple(tipo="calidad_aire_mv", valor=1200, unidad="mV")
-    mal = simple(tipo="calidad_aire_mv", valor=3301, unidad="mV")
+def test_it_api_29_rango_del_mq135_en_ppm(client):
+    ok = simple(tipo="co2_equiv", valor=520, unidad="ppm")
+    mal = simple(tipo="co2_equiv", valor=10001, unidad="ppm")
     assert client.post(URL, json=ok).status_code == 201
     assert client.post(URL, json=mal).status_code == 422
 

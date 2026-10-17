@@ -56,6 +56,7 @@ struct Muestra {
   float hum;
   uint16_t mqMv;
   uint16_t mqRaw;
+  float mqPpm;               // CO2 equivalente estimado (ppm); 0 = sin calibrar
   uint8_t flags;
   int8_t rssi;
 };
@@ -225,6 +226,21 @@ void leerMQ135(uint16_t &mv, uint16_t &raw) {
   mv = sumMv / 16;
   raw = sumRaw / 16;
 }
+
+// Conversión a ppm de CO2 equivalente (estimación con la curva típica del MQ135).
+// Supone módulo a 5 V, RL = 10 kΩ y divisor 10k/20k entre AO y el GPIO; R0 se calibra en la
+// primera lectura tras el precalentamiento suponiendo aire limpio (~400 ppm).
+const float MQ_VCC_MV = 5000.0, MQ_RL_KOHM = 10.0, MQ_DIVISOR = 1.5;
+const float MQ_CURVA_A = 116.6020682, MQ_CURVA_B = -2.769034857, MQ_PPM_AIRE = 400.0;
+float mqR0 = 0;
+
+float mqPpmDesdeMv(uint16_t mvGpio) {
+  float vao = mvGpio * MQ_DIVISOR;
+  if (vao < 1.0 || vao >= MQ_VCC_MV) return 0;
+  float rs = MQ_RL_KOHM * (MQ_VCC_MV - vao) / vao;
+  if (mqR0 <= 0) mqR0 = rs / pow(MQ_PPM_AIRE / MQ_CURVA_A, 1.0 / MQ_CURVA_B);
+  return constrain(MQ_CURVA_A * pow(rs / mqR0, MQ_CURVA_B), 300.0, 10000.0);
+}
 #endif
 
 uint8_t leerSensores(Muestra &m) {
@@ -244,6 +260,7 @@ uint8_t leerSensores(Muestra &m) {
 #if USE_MQ135 == 1
   if (millis() - inicio >= MQ135_PRECALENTAMIENTO_MS) {   // el calentador necesita unos minutos para estabilizar
     leerMQ135(m.mqMv, m.mqRaw);
+    m.mqPpm = mqPpmDesdeMv(m.mqMv);
     f |= F_GAS;
   }
 #elif USE_MQ135 == 2
@@ -251,6 +268,7 @@ uint8_t leerSensores(Muestra &m) {
   sg = constrain(sg + random(-25, 26), 300.0, 2500.0);
   m.mqMv = (uint16_t)sg;
   m.mqRaw = (uint16_t)(sg * 4095.0 / 3300.0);
+  m.mqPpm = 400.0 + (sg - 300.0) / 2200.0 * 1600.0;
   f |= F_GAS;
 #endif
   return f;
@@ -297,7 +315,7 @@ void jsonLectura(const Muestra &m, String &out) {
   if (m.flags & F_TEMP) agrega("temperatura", m.temp, "C", 1);
   if (m.flags & F_HUM) agrega("humedad", m.hum, "%", 1);
   if (m.flags & F_GAS) {
-    agrega("calidad_aire_mv", m.mqMv, "mV", 0);
+    agrega("co2_equiv", m.mqPpm, "ppm", 0);
     agrega("calidad_aire_raw", m.mqRaw, "adc", 0);
   }
   out += "]}";

@@ -24,7 +24,7 @@ La arquitectura sigue la propuesta de la clase «Del sensor a Grafana» (SIY6122
 
 **Fuera del alcance (primera entrega)**
 
-- Estimación en ppm de CO₂/gases del MQ135: requiere calibración de R0 en aire limpio; se reportan `calidad_aire_mv` y `calidad_aire_raw` (relativos).
+- Medición certificada de CO₂/gases con el MQ135: se reporta `co2_equiv` (ppm), una estimación con la curva típica y R0 autocalibrado en aire limpio, útil para tendencias; `calidad_aire_raw` queda como diagnóstico.
 - Alertas por correo/Telegram y portal de clientes (semana 15 del cronograma); el modelo `alertas` ya existe en PostgreSQL.
 - Alta disponibilidad (varias instancias, balanceadores) y pruebas de penetración formales.
 - Despliegue automatizado con Ansible (semana 14).
@@ -56,11 +56,11 @@ Las bases no publican puertos: solo se accede a ellas desde la red interna de Do
 | `GET /clientes/{id}/sensores` · `GET /clientes/{id}/sensores/{sensor}/lecturas` | Sensores del cliente (con última lectura) y sus lecturas | `200` · `404` |
 | `GET /health` | Estado de la API, PostgreSQL e InfluxDB | `200` · `503` con la base caída |
 
-Autenticación: cabecera `X-API-Key` en todos los endpoints salvo `/health`. Identificador de idempotencia: par (`sensor`, `seq`) por cliente. Validación de rango físico: temperatura −40…80 °C, humedad 0…100 %, `calidad_aire_mv` 0…3300 mV, `calidad_aire_raw` 0…4095; `timestamp` no puede superar 5 min en el futuro. Toda la API trabaja en UTC.
+Autenticación: cabecera `X-API-Key` en todos los endpoints salvo `/health`. Identificador de idempotencia: par (`sensor`, `seq`) por cliente. Validación de rango físico: temperatura −40…80 °C, humedad 0…100 %, `co2_equiv` 300…10000 ppm, `calidad_aire_mv` 0…3300 mV (diagnóstico), `calidad_aire_raw` 0…4095; `timestamp` no puede superar 5 min en el futuro. Toda la API trabaja en UTC.
 
 ### 2.3 Modelo de datos
 
-**InfluxDB 2.7** (org `duoc`, bucket `sensores`): measurement = tipo de medición (`temperatura`, `humedad`, `calidad_aire_mv`…); tags `sensor`, `cliente`, `ubicacion`, `unidad`; fields `valor`, `seq`, `rssi`, `ts_dispositivo` y `fw`; hora del punto = hora del servidor. Agregar una magnitud nueva **no requiere migrar nada** (casos `IT-DB-04`, `IT-E2E-07`). Tokens: la API recibe uno de lectura y escritura y Grafana uno de **solo lectura**, creados al inicializar el volumen (`db/influx-init.sh`).
+**InfluxDB 2.7** (org `duoc`, bucket `sensores`): measurement = tipo de medición (`temperatura`, `humedad`, `co2_equiv`…); tags `sensor`, `cliente`, `ubicacion`, `unidad`; fields `valor`, `seq`, `rssi`, `ts_dispositivo` y `fw`; hora del punto = hora del servidor. Agregar una magnitud nueva **no requiere migrar nada** (casos `IT-DB-04`, `IT-E2E-07`). Tokens: la API recibe uno de lectura y escritura y Grafana uno de **solo lectura**, creados al inicializar el volumen (`db/influx-init.sh`).
 
 **PostgreSQL 16** (`db/init.sql`):
 
@@ -271,7 +271,7 @@ Cada defecto se registra con: ID de caso, pasos, resultado esperado vs real, evi
 | R-15 | Doble escritura no atómica: la marca de seq (PostgreSQL) y el punto (InfluxDB) pueden quedar desfasados si la API cae entre ambas | Baja | Medio | Si InfluxDB falla se borra la marca y se responde 503 (IT-DB-12); queda una ventana mínima si el proceso muere justo entre ambos pasos; el simulador `--verify` y el conteo por seq la detectan |
 | R-16 | InfluxDB 2.x tarda unas décimas de segundo en hacer visible una escritura | Alta | Bajo | La idempotencia no depende de InfluxDB (usa PostgreSQL); las verificaciones consultan con reintentos hasta 10 s |
 | R-17 | El token de Grafana o de la API se filtra | Baja | Alto | Tokens con privilegios mínimos, en volúmenes separados y fuera del repositorio; el de Grafana no puede escribir (IT-DB-18); rotar con `docker compose down -v` solo si se acepta perder datos |
-| R-18 | MQ135 con lecturas relativas, sin calibrar, y salida analógica superior a 3,3 V | Media | Alto | Reportar `calidad_aire_mv`/`_raw` (no ppm); divisor de tensión verificado con multímetro antes de conectar (IT-SEN-07); precalentamiento (IT-SEN-08) |
+| R-18 | MQ135 con lecturas relativas, sin calibrar, y salida analógica superior a 3,3 V | Media | Alto | Reportar `co2_equiv` (ppm estimado, R0 autocalibrado) y `calidad_aire_raw`; divisor de tensión verificado con multímetro antes de conectar (IT-SEN-07); precalentamiento (IT-SEN-08) |
 | R-19 | Los materiales de la clase muestran ClickHouse en el demo y InfluxDB + PostgreSQL en las diapositivas | Media | Medio | Se siguió la diapositiva 4 (InfluxDB + PostgreSQL); confirmar con el docente antes de la Evaluación 2 |
 | R-05 | Lecturas `NaN` o poco precisas del DHT (especialmente DHT11) | Media | Medio | El firmware descarta `NaN`; comparar con instrumento de referencia; registrar la tolerancia del sensor |
 | R-06 | Caídas de tensión (cable/puerto USB) provocan fallos de WiFi | Media | Medio | Cable de datos corto y de calidad; puerto directo; alimentación externa; `USE_LOW_TX_POWER` en el diagnóstico |
