@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Simulador de dispositivos ESP32 para probar API + BD sin hardware.
+"""Simulador de sensores ESP32 para probar API + InfluxDB/PostgreSQL + Grafana sin hardware.
 
 Ejemplos:
   # 3 dispositivos, 20 lecturas cada uno, con 10 % de reenvíos duplicados y verificación final
-  python simulador_sensor.py --url http://127.0.0.1:8000 --api-key CLAVE --devices 3 --count 20 --dup-rate 0.1 --verify
+  python simulador_sensor.py --url http://127.0.0.1:8000 --api-key CLAVE --devices 3 --count 20 --dup-rate 0.1 --verify   (crea el cliente si no existe)
 
   # Carga: 20 dispositivos en paralelo, 1 lectura/s cada uno, ~3 minutos
   python simulador_sensor.py --url http://IP_EC2:8000 --api-key CLAVE --devices 20 --count 180 --interval 1 --parallel
@@ -28,26 +28,34 @@ import requests
 
 
 class Dispositivo:
-    def __init__(self, device_id: str, con_pm: bool):
-        self.device_id = device_id
+    def __init__(self, sensor: str, cliente: str, con_pm: bool, con_mq: bool):
+        self.device_id = sensor            # nombre del sensor (la clave de agrupación en los resultados)
+        self.cliente = cliente
         self.seq = 0
         self.temp = random.uniform(18, 26)
         self.hum = random.uniform(40, 60)
+        self.mq = random.uniform(600, 1200)
         self.con_pm = con_pm
+        self.con_mq = con_mq
 
     def siguiente(self) -> dict:
         self.temp += random.uniform(-0.3, 0.3)
         self.hum = min(100.0, max(0.0, self.hum + random.uniform(-1, 1)))
         med = [
-            {"magnitud": "temperatura", "valor": round(self.temp, 1), "unidad": "C"},
-            {"magnitud": "humedad", "valor": round(self.hum, 1), "unidad": "%"},
+            {"tipo": "temperatura", "valor": round(self.temp, 1), "unidad": "C"},
+            {"tipo": "humedad", "valor": round(self.hum, 1), "unidad": "%"},
         ]
+        if self.con_mq:
+            self.mq = min(3300.0, max(0.0, self.mq + random.uniform(-25, 25)))
+            med.append({"tipo": "calidad_aire_mv", "valor": round(self.mq, 0), "unidad": "mV"})
         if self.con_pm:
-            med.append({"magnitud": "pm2_5", "valor": round(max(0, random.gauss(12, 4)), 1), "unidad": "ug/m3"})
+            med.append({"tipo": "pm2_5", "valor": round(max(0, random.gauss(12, 4)), 1), "unidad": "ug/m3"})
         p = {
-            "device_id": self.device_id,
+            "sensor": self.device_id,
+            "cliente": self.cliente,
+            "ubicacion": "Simulador",
             "seq": self.seq,
-            "ts_dispositivo": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "rssi": random.randint(-80, -50),
             "fw_version": "sim-1.0",
             "mediciones": med,
@@ -59,13 +67,15 @@ class Dispositivo:
 def corromper(p: dict) -> dict:
     """Devuelve una variante inválida del payload (para casos negativos)."""
     p = json.loads(json.dumps(p))
-    tipo = random.choice(["sin_med", "device_malo", "seq_neg", "campo_extra"])
+    tipo = random.choice(["sin_med", "sensor_malo", "seq_neg", "campo_extra", "fuera_de_rango"])
     if tipo == "sin_med":
         p["mediciones"] = []
-    elif tipo == "device_malo":
-        p["device_id"] = "id con espacios;"
+    elif tipo == "sensor_malo":
+        p["sensor"] = "id con espacios;"
     elif tipo == "seq_neg":
         p["seq"] = -5
+    elif tipo == "fuera_de_rango":
+        p["mediciones"][0]["valor"] = 250.0      # temperatura imposible para un DHT
     else:
         p["extra"] = 1
     return p
@@ -94,7 +104,7 @@ def enviar(sess, args, res, p, esperado, headers):
     t0 = time.perf_counter()
     try:
         r = sess.post(args.url.rstrip("/") + "/api/v1/lecturas", json=p, headers=headers, timeout=args.timeout)
-        res.registrar(r.status_code, time.perf_counter() - t0, p.get("device_id"), p.get("seq"), esperado)
+        res.registrar(r.status_code, time.perf_counter() - t0, p.get("sensor"), p.get("seq"), esperado)
     except requests.RequestException:
         with res.lock:
             res.errores_red += 1
@@ -116,14 +126,25 @@ def correr_dispositivo(dev: Dispositivo, args, res: Resultados):
             time.sleep(args.interval)
 
 
+def _leer(args, sensor: str, esperadas: int) -> list:
+    """InfluxDB 2.x hace visible una escritura tras unas décimas de segundo: se consulta hasta 10 s."""
+    headers = {"X-API-Key": args.api_key}
+    fin = time.time() + 10
+    while True:
+        r = requests.get(args.url.rstrip("/") + "/api/v1/lecturas",
+                         params={"cliente": args.cliente, "sensor": sensor, "limit": 1000},
+                         headers=headers, timeout=args.timeout)
+        r.raise_for_status()
+        datos = r.json()
+        if len(datos) >= esperadas or time.time() > fin:
+            return datos
+        time.sleep(0.5)
+
+
 def verificar(args, res: Resultados) -> bool:
     ok = True
-    headers = {"X-API-Key": args.api_key}
     for device_id, seqs in sorted(res.enviados.items()):
-        r = requests.get(args.url.rstrip("/") + "/api/v1/lecturas",
-                         params={"device_id": device_id, "limit": 1000}, headers=headers, timeout=args.timeout)
-        r.raise_for_status()
-        en_bd = [l["seq"] for l in r.json()]
+        en_bd = [l["seq"] for l in _leer(args, device_id, len(seqs))]
         faltan = seqs - set(en_bd)
         duplicados = len(en_bd) - len(set(en_bd))
         extra = set(en_bd) - seqs
@@ -138,13 +159,17 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--url", default="http://127.0.0.1:8000")
     ap.add_argument("--api-key", required=True)
+    ap.add_argument("--cliente", default="cliente-001", help="ID del cliente al que pertenecen los sensores")
+    ap.add_argument("--crear-cliente", action=argparse.BooleanOptionalAction, default=True,
+                    help="registra el cliente si no existe (POST /clientes)")
     ap.add_argument("--devices", type=int, default=1)
-    ap.add_argument("--prefix", default="sim", help="prefijo del device_id (sim-01, sim-02…)")
+    ap.add_argument("--prefix", default="sim", help="prefijo del nombre del sensor (sim-<hora>-01, …)")
     ap.add_argument("--count", type=int, default=10, help="lecturas por dispositivo")
     ap.add_argument("--interval", type=float, default=0.0, help="segundos entre lecturas")
     ap.add_argument("--dup-rate", type=float, default=0.0, help="probabilidad de reenviar el mismo seq")
     ap.add_argument("--bad-rate", type=float, default=0.0, help="probabilidad de enviar un payload inválido / clave errónea")
     ap.add_argument("--with-pm", action="store_true", help="incluye pm2_5 (prueba de nuevo sensor)")
+    ap.add_argument("--with-mq", action="store_true", help="incluye calidad_aire_mv (MQ135)")
     ap.add_argument("--parallel", action="store_true", help="un hilo por dispositivo")
     ap.add_argument("--timeout", type=float, default=5.0)
     ap.add_argument("--verify", action="store_true", help="consulta la API y compara con lo enviado")
@@ -155,7 +180,14 @@ def main() -> int:
         random.seed(args.seed)
 
     run = datetime.now().strftime("%H%M%S")   # evita choques de seq con ejecuciones anteriores
-    devs = [Dispositivo(f"{args.prefix}-{run}-{i + 1:02d}", args.with_pm) for i in range(args.devices)]
+    if args.crear_cliente:
+        r = requests.post(args.url.rstrip("/") + "/clientes", json={"id_cliente": args.cliente, "nombre": "Cliente simulado"},
+                          headers={"X-API-Key": args.api_key}, timeout=args.timeout)
+        if r.status_code not in (201, 409):
+            print(f"No se pudo registrar el cliente {args.cliente}: HTTP {r.status_code} {r.text[:120]}")
+            return 1
+    devs = [Dispositivo(f"{args.prefix}-{run}-{i + 1:02d}", args.cliente, args.with_pm, args.with_mq)
+            for i in range(args.devices)]
     res = Resultados()
 
     t0 = time.perf_counter()
