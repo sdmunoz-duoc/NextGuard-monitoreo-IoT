@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Convierte el plan maestro, los casos de prueba (.md) y los diagramas (.html) a PDF con Chrome headless.
 
-- docs/01_plan_maestro.pdf : incluye un anexo con los 5 diagramas (SVG tomado de docs/diagramas/*.html), en páginas horizontales.
+- docs/01_plan_maestro.pdf : incluye un anexo con los 6 diagramas (SVG tomado de docs/diagramas/*.html), en páginas horizontales.
 - docs/02_casos_de_prueba.pdf
 - docs/diagramas/*.pdf : un PDF A4 horizontal por diagrama (tema claro, sin barra de navegación)
 
@@ -29,6 +29,7 @@ DIAGRAMAS = [
     ("secuencia_pruebas.html", "Secuencia de las pruebas"),
     ("despliegue_aws.html", "Despliegue en AWS"),
     ("estrategia_niveles.html", "Niveles de prueba"),
+    ("gantt.html", "Gantt del proyecto"),
 ]
 
 CSS_DOC = """
@@ -107,12 +108,12 @@ def exportar_diagramas():
         ancho, alto = (float(vb.group(2)), float(vb.group(3))) if vb else (1.0, 0.0)
         horizontal = alto == 0 or ancho / alto >= 1.3
         pagina = "A4 landscape" if horizontal else "A4"
-        alto_svg = "125mm" if horizontal else "185mm"
+        alto_svg = "108mm" if horizontal else "180mm"
         ajuste = (f"<style>@page{{size:{pagina};margin:8mm}}nav{{display:none}}body{{background:#fff;font-size:12px}}"
                   f"main{{max-width:none;padding:0}}.fig{{overflow:visible;border:0;padding:0}}"
                   f".fig svg{{min-width:0;max-height:{alto_svg};margin:0 auto}}"
                   "h1{font-size:16pt;margin:0 0 2px}p.lead{margin:0 0 6px;font-size:9pt}"
-                  "ul.notes{margin:8px 0 0;font-size:8.5pt}ul.notes li{margin:2px 0}"
+                  "ul.notes{margin:6px 0 0;font-size:8pt}ul.notes li{margin:1px 0}"
                   "figcaption{font-size:8.5pt;margin:4px 0 0}</style>")
         with tempfile.TemporaryDirectory() as tmp:
             h = os.path.join(tmp, nombre)

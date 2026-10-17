@@ -3,4 +3,5 @@ uvicorn[standard]>=0.29
 sqlalchemy>=2.0
 pydantic>=2.6
 python-dotenv>=1.0
-psycopg[binary]>=3.1      # PostgreSQL. URL: postgresql+psycopg://usuario:clave@host:5432/sensores
+influxdb-client>=1.44
+psycopg[binary]>=3.1      # PostgreSQL (metadatos). URL: postgresql+psycopg://usuario:clave@postgres:5432/iot

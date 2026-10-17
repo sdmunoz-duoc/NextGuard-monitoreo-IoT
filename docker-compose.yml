@@ -1,0 +1,109 @@
+# NextGuard: sensor -> API -> InfluxDB (lecturas) + PostgreSQL (clientes, sensores, alertas) -> Grafana.
+# Un contenedor por servicio. Solo la API (:8000) y Grafana (:3000) se publican; las bases quedan dentro.
+# Uso:  cp .env.example .env && editar claves && docker compose up -d --build
+name: nextguard
+
+x-tz: &utc
+  TZ: UTC
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    restart: unless-stopped
+    environment:
+      <<: *utc
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_ADMIN_USER:-admin}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_ADMIN_PASSWORD:?definir en .env}
+      DOCKER_INFLUXDB_INIT_ORG: duoc
+      DOCKER_INFLUXDB_INIT_BUCKET: sensores
+      DOCKER_INFLUXDB_INIT_RETENTION: ${INFLUX_RETENCION:-0}   # 0 = sin caducidad; p. ej. 90d
+    volumes:
+      - influx-data:/var/lib/influxdb2
+      - influx-config:/etc/influxdb2
+      - ./db/influx-init.sh:/docker-entrypoint-initdb.d/10-tokens.sh:ro
+      - tokens-api:/tokens-api
+      - tokens-grafana:/tokens-grafana
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 768m
+    networks: [backend]            # sin puertos publicados
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      <<: *utc
+      POSTGRES_DB: iot
+      POSTGRES_USER: iot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?definir en .env}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iot -d iot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 512m
+    networks: [backend]            # sin puertos publicados
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      <<: *utc
+      DATABASE_URL: postgresql+psycopg://iot:${POSTGRES_PASSWORD}@postgres:5432/iot
+      API_KEYS: ${API_KEYS:?definir en .env}
+      AUTO_CREATE_TABLES: "false"          # el esquema lo crea db/init.sql
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_ORG: duoc
+      INFLUX_BUCKET: sensores
+      INFLUX_TOKEN_FILE: /tokens/token
+    volumes:
+      - tokens-api:/tokens:ro
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    mem_limit: 512m
+    networks: [backend]
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    restart: unless-stopped
+    environment:
+      <<: *utc
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?definir en .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/nextguard.json
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - tokens-grafana:/run/tokens:ro
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    mem_limit: 512m
+    networks: [backend]
+
+volumes:
+  influx-data:
+  influx-config:
+  pg-data:
+  grafana-data:
+  tokens-api:
+  tokens-grafana:
+
+networks:
+  backend:

@@ -113,7 +113,7 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 """
 
 NAV = [("index.html", "Índice"), ("arquitectura.html", "Arquitectura"), ("flujo_datos.html", "Flujo de datos"),
-       ("secuencia_pruebas.html", "Secuencia"), ("despliegue_aws.html", "Despliegue AWS"), ("estrategia_niveles.html", "Niveles")]
+       ("secuencia_pruebas.html", "Secuencia"), ("despliegue_aws.html", "Despliegue AWS"), ("estrategia_niveles.html", "Niveles"), ("gantt.html", "Gantt")]
 
 
 def pagina(archivo, titulo, lead, svg, caption, notas):
@@ -132,25 +132,25 @@ def pagina(archivo, titulo, lead, svg, caption, notas):
 
 # ---------------------------------------------------------------- 1. arquitectura
 def arquitectura():
-    s = Svg(1060, 470, "Arquitectura: el ESP32 con sensor DHT llega por WiFi e Internet a la API, que guarda en PostgreSQL; "
-                       "API, base de datos y Grafana son contenedores Docker de una sola EC2; PostgreSQL no es accesible desde Internet", y0=34)
+    s = Svg(1060, 470, "Arquitectura: el ESP32 con DHT11 y MQ135 llega por WiFi e Internet a la API, que guarda lecturas en InfluxDB y configuración en PostgreSQL; "
+                       "Grafana consulta InfluxDB; API, bases y Grafana son contenedores de una sola EC2 y las bases no se publican", y0=34)
     s.rect(16, 50, 328, 360, "zone")
     s.text(30, 72, "LABORATORIO · WiFi 2.4 GHz", "tz", "start")
     s.rect(530, 50, 514, 360, "zone")
     s.text(546, 72, "AWS LEARNER LAB · VPC", "tz", "start")
-    s.rect(538, 86, 494, 304, "sg")
-    s.text(552, 104, "EC2 · t3.medium · docker compose · nextguard-sg", "tz", "start")
+    s.rect(542, 86, 494, 304, "sg")
+    s.text(556, 104, "EC2 · t3.medium · docker compose · nextguard-sg", "tz", "start")
 
-    s.box(36, 140, 100, 60, "Sensor DHT", ["11 / 22"])
-    s.box(180, 140, 130, 60, "ESP32", ["cola · NTP · reintentos"], "box acc")
-    s.line([(136, 170), (180, 170)])
-    s.text(158, 162, "GPIO", "ts")
-    s.box(180, 260, 130, 50, "Router WiFi", ["WPA2"])
-    s.line([(245, 200), (245, 260)])
-    s.text(255, 234, "WiFi", "ts", "start")
+    s.box(36, 130, 110, 80, "Sensores", ["DHT11 · GPIO4", "MQ135 · GPIO34"])
+    s.box(180, 130, 130, 80, "ESP32", ["portal cautivo", "cola · NTP · reintentos"], "box acc")
+    s.line([(146, 170), (180, 170)])
+    s.text(163, 162, "GPIO", "ts")
+    s.box(180, 270, 130, 50, "Router WiFi", ["WPA2"])
+    s.line([(245, 210), (245, 270)])
+    s.text(255, 244, "WiFi", "ts", "start")
 
     s.box(390, 86, 110, 44, "pool.ntp.org")
-    s.line([(245, 140), (245, 108), (390, 108)], "acc", dash=True)
+    s.line([(245, 130), (245, 108), (390, 108)], "acc", dash=True)
     s.text(318, 100, "hora NTP · UDP 123", "ts")
 
     s.box(390, 160, 110, 46, "Simulador", ["(PC) · pytest"], "box tool")
@@ -158,47 +158,50 @@ def arquitectura():
     s.text(453, 226, "mismo POST", "ts", "start")
 
     s.box(390, 235, 110, 100, "Internet")
-    s.line([(310, 285), (390, 285)])
-    s.text(350, 277, "HTTP", "ts")
+    s.line([(310, 295), (390, 295)])
+    s.text(350, 287, "HTTP", "ts")
 
-    s.box(604, 235, 140, 100, "api · FastAPI", ["TCP 8000", "valida · autentica", "idempotencia por seq"], "box acc")
-    s.line([(500, 290), (604, 290)])
-    s.text(571, 276, "POST JSON", "ts")
-    s.text(571, 308, "X-API-Key", "ts")
+    s.box(590, 112, 160, 70, "grafana", ["TCP 3000", "dashboards · Flux"], "box acc")
+    s.box(590, 235, 160, 100, "api · FastAPI", ["TCP 8000", "valida · autentica", "idempotencia por seq"], "box acc")
+    s.box(830, 112, 190, 70, "influxdb 2.7", ["lecturas en el tiempo", "bucket sensores"], "box acc")
+    s.box(830, 245, 190, 80, "postgres 16", ["clientes · sensores · alertas", "marcas de seq (UNIQUE)"], "box acc")
 
-    s.box(876, 235, 144, 100, "db · PostgreSQL 16", ["solo red interna", "volumen pgdata", "UNIQUE(disp., seq)"], "box acc")
-    s.line([(744, 285), (876, 285)])
-    s.text(810, 277, "SQL", "ts")
+    s.line([(500, 295), (590, 295)])
+    s.text(545, 281, "POST JSON", "ts")
+    s.text(545, 321, "X-API-Key", "ts")
+    s.line([(500, 248), (520, 248), (520, 147), (590, 147)])
+    s.text(584, 139, "navegador", "ts", "end")
+    s.line([(750, 270), (790, 270), (790, 165), (830, 165)])
+    s.text(795, 232, "write_lp", "ts", "start")
+    s.line([(750, 147), (830, 147)], "ok")
+    s.text(790, 139, "Flux", "ts")
+    s.text(790, 163, "solo lectura", "ts")
+    s.line([(750, 305), (830, 305)])
+    s.text(790, 297, "SQL", "ts")
 
-    s.box(716, 110, 170, 70, "grafana", ["TCP 3000", "dashboards"], "box acc")
-    s.line([(500, 248), (520, 248), (520, 145), (716, 145)])
-    s.text(618, 137, "navegador · HTTP 3000", "ts")
-    s.line([(886, 145), (948, 145), (948, 235)], "ok")
-    s.text(940, 200, "SQL (grafana_ro)", "ts", "end")
-
-    # acceso público a PostgreSQL: bloqueado
+    # acceso público a las bases: bloqueado
     s.line([(420, 335), (420, 372), (858, 372)], "bad", arrow=False, dash=True)
     s.cross(872, 372)
-    s.text(640, 364, "TCP 5432 desde Internet: descartado (IT-SEC-06)", "tbad")
+    s.text(452, 364, "TCP 8086 y 5432 desde Internet: descartado (IT-SEC-06)", "tbad", "start")
 
-    s.badge(158, 222, "N1")
-    s.badge(350, 320, "N2")
-    s.badge(806, 322, "N3")
+    s.badge(158, 230, "N1")
+    s.badge(350, 326, "N2")
+    s.badge(960, 345, "N3")
     s.badge(1020, 72, "N0")
     s.badge(40, 440, "N4")
     s.line([(62, 440), (990, 440)], "acc")
-    s.text(526, 432, "extremo a extremo: sensor → BD → consulta GET /lecturas y panel de Grafana", "tacc")
+    s.text(526, 432, "extremo a extremo: sensor → InfluxDB → consulta GET /lecturas y panel de Grafana", "tacc")
 
     pagina("arquitectura.html", "Arquitectura bajo prueba",
            "Quién habla con quién, por dónde cruza la red y qué tramo cubre cada nivel de prueba.",
            s.render(),
-           "El ESP32 solo conoce a la API; la API es el único componente que escribe en PostgreSQL y Grafana solo lo lee, con un usuario de solo lectura. "
-           "Los tres servicios son contenedores de una misma EC2. El simulador reemplaza al ESP32 con el mismo POST, y la línea roja muestra el camino que "
-           "<strong>debe fallar</strong>: PostgreSQL no publica su puerto.",
-           ["<strong>N1</strong> sensor↔ESP32 · <strong>N2</strong> ESP32↔red/API · <strong>N3</strong> API↔BD · "
+           "El ESP32 solo conoce a la API. La API es el único componente que escribe: las lecturas en InfluxDB y los clientes, sensores y marcas de seq en PostgreSQL. "
+           "Grafana consulta InfluxDB con un token de <strong>solo lectura</strong>. La línea roja muestra el camino que <strong>debe fallar</strong>: las bases no publican sus puertos.",
+           ["<strong>N1</strong> sensor↔ESP32 · <strong>N2</strong> ESP32↔red/API · <strong>N3</strong> API↔bases · "
             "<strong>N4</strong> recorre todo el camino · <strong>N0</strong> verifica el entorno AWS y el stack Docker · N5/N6 se aplican sobre todo el conjunto.",
             "La hora llega por NTP directamente a Internet, no pasa por la API: si falla, la lectura se guarda con <code>ts_dispositivo = null</code>.",
-            "Sin Elastic IP, la dirección de la EC2 cambia al reiniciar y el firmware debe actualizarse (riesgo R-01)."])
+            "El ESP32 se configura una sola vez desde su portal cautivo (red <code>SENSOR-XXXX</code>); los siete campos quedan en la flash.",
+            "Sin Elastic IP, la dirección de la EC2 cambia al reiniciar y el servidor guardado en el ESP32 debe actualizarse (riesgo R-01)."])
 
 
 # ---------------------------------------------------------------- 2. flujo de datos
@@ -206,19 +209,19 @@ def flujo_datos():
     W, H = 1080, 760
     s = Svg(W, H, "Recorrido de una lectura en siete pasos, con lo que ocurre en cada fallo posible: se absorbe, se degrada o se pierde una muestra")
     filas = [
-        ("Lectura del sensor", "DHT · cada 10 s", None,
-         ("warn", "SE DEGRADA", ["NaN → la muestra se omite"], "sin dato / NaN", ["IT-SEN-02"])),
-        ("Asignar seq y hora", "seq en NVS · hora NTP", "T y H válidas",
+        ("Lectura de los sensores", "DHT11 + MQ135 · cada ciclo", None,
+         ("warn", "SE DEGRADA", ["NaN → se omite esa magnitud (el MQ135 sigue)"], "sin dato / NaN", ["IT-SEN-02"])),
+        ("Asignar seq y hora", "seq en NVS · hora NTP", "T, H y gas válidos",
          ("warn", "SE DEGRADA", ["Sin NTP → ts_dispositivo = null", "Reinicio → el seq salta +20"], "sin NTP / reinicio", ["IT-NET-04", "IT-E2E-03"])),
-        ("Cola en RAM", "60 muestras, FIFO", "muestra {seq, hora, T, H}",
+        ("Cola en RAM", "60 muestras, FIFO", "muestra {seq, hora, T, H, gas}",
          ("bad", "SE PIERDE", ["Cola llena → descarta la más antigua", "y suma a «perdidas»"], "sin envío 10 min", ["IT-NFR-08"])),
         ("Envío HTTP", "POST · o /batch si hay varias", "vaciar cola",
-         ("ok", "SE ABSORBE", ["Sin WiFi · timeout · 5xx · 401 → conserva", "y reintenta (backoff 2 → 60 s)"], "no llega o no autoriza", ["IT-NET-03 · IT-DB-11", "IT-API-19/20/21"])),
-        ("API valida", "clave · esquema · tamaño", "JSON + X-API-Key",
-         ("bad", "SE PIERDE", ["422 / 413 → el ESP32 descarta la muestra", "(un lote se reintenta individual)"], "rechazada", ["IT-API-05…10"])),
-        ("INSERT en la BD", "UNIQUE (dispositivo, seq)", "válida",
-         ("ok", "SE ABSORBE", ["Mismo seq → 200 {duplicado: true}", "no inserta"], "seq repetido", ["IT-API-02", "IT-DB-02"])),
-        ("Verificación", "GET /lecturas + simulador --verify", "commit",
+         ("ok", "SE ABSORBE", ["Sin WiFi · timeout · 5xx · 401/403 → conserva", "y reintenta (backoff 2 → 60 s)"], "no llega o no autoriza", ["IT-NET-03 · IT-DB-11", "IT-API-19/20/21"])),
+        ("API valida", "clave · esquema · rango · cliente", "JSON + X-API-Key",
+         ("bad", "SE PIERDE", ["422 / 413 → el ESP32 descarta la muestra", "(un lote se reintenta individual)"], "rechazada", ["IT-API-05…10 · 24"])),
+        ("Guardar", "marca en PostgreSQL → InfluxDB", "válida",
+         ("ok", "SE ABSORBE", ["Mismo seq → 200 {duplicado: true}", "no escribe en InfluxDB"], "seq repetido", ["IT-API-02", "IT-DB-02"])),
+        ("Verificación", "GET /lecturas · Grafana · --verify", "escrito",
          None),
     ]
     x0, bw, bh, paso = 120, 230, 60, 100
@@ -252,17 +255,18 @@ def flujo_datos():
            "<strong>Se degrada</strong>: la lectura llega con menos información. <strong>Se pierde</strong>: una muestra se descarta y queda contada.",
            ["Los dos únicos puntos donde el diseño acepta perder una muestra son la <strong>cola llena</strong> y el <strong>rechazo 4xx</strong>; "
             "ambos se registran en el monitor serie (<code>perdidas</code>) para poder contrastarlos con la BD.",
-            "La idempotencia depende del par (<code>device_id</code>, <code>seq</code>): por eso el <code>seq</code> se guarda en NVS y salta 20 al reiniciar.",
-            "El paso 7 es lo que convierte el resultado en evidencia: el simulador compara los <code>seq</code> enviados con los guardados."])
+            "La idempotencia depende del par (<code>sensor</code>, <code>seq</code>): PostgreSQL lo registra con una clave primaria; por eso el <code>seq</code> se guarda en NVS y salta 20 al reiniciar.",
+            "El paso 7 es lo que convierte el resultado en evidencia: el simulador compara los <code>seq</code> enviados con los guardados y Grafana los muestra."])
 
 
 # ---------------------------------------------------------------- 3. secuencia
 def secuencia():
-    s = Svg(1060, 940, "Diagrama de secuencia de cinco escenarios de prueba entre ESP32, API, base de datos y verificador")
-    X = {"esp": 120, "api": 420, "db": 720, "ver": 960}
-    nombres = {"esp": ("ESP32", "firmware"), "api": ("api", "FastAPI · contenedor"), "db": ("db", "PostgreSQL · contenedor"), "ver": ("Verificador", "simulador · pytest")}
+    s = Svg(1060, 1010, "Diagrama de secuencia de cinco escenarios de prueba entre ESP32, API, PostgreSQL, InfluxDB y verificador")
+    X = {"esp": 90, "api": 320, "pg": 550, "inf": 780, "ver": 975}
+    nombres = {"esp": ("ESP32", "firmware"), "api": ("api", "FastAPI"), "pg": ("postgres", "marcas de seq"),
+               "inf": ("influxdb", "lecturas"), "ver": ("Verificador", "simulador · pytest")}
     for k, (t, sb) in nombres.items():
-        s.box(X[k] - 75, 10, 150, 46, t, [sb], "box acc" if k != "ver" else "box tool")
+        s.box(X[k] - 70, 10, 140, 46, t, [sb], "box acc" if k != "ver" else "box tool")
     idx_vida = len(s.p)
 
     y = [80]
@@ -292,37 +296,41 @@ def secuencia():
 
     # A
     ini = y[0]; marco("A · Camino feliz", "IT-E2E-01 · IT-API-01")
-    msg("esp", "api", "POST /lecturas {seq=7, T, H} + X-API-Key")
-    msg("api", "db", "SELECT: ¿existe (dispositivo, seq=7)?  → no")
-    msg("api", "db", "INSERT lectura + mediciones · COMMIT")
-    msg("api", "esp", "201 {duplicado: false}", "ok", True)
+    msg("esp", "api", "POST /lecturas {sensor, cliente, seq=7, …}")
+    msg("api", "pg", "¿cliente y sensor? · INSERT marca (sensor, seq=7)")
+    msg("api", "inf", "write_lp: un punto por medición")
+    msg("api", "esp", "201 {estado: guardado}", "ok", True)
     nota("esp", "desencola seq=7", "tokk")
     fin_marco(ini)
     # B
     ini = y[0]; marco("B · La respuesta se perdió y el ESP32 reintenta", "IT-API-02 · IT-DB-02")
     msg("esp", "api", "POST /lecturas {seq=7}  (reintento por timeout)")
-    msg("api", "db", "SELECT → ya existe seq=7")
-    msg("api", "esp", "200 {duplicado: true}  · no inserta", "ok", True)
+    msg("api", "pg", "INSERT marca (sensor, seq=7) → ya existe")
+    msg("api", "esp", "200 {duplicado: true}  · no escribe en InfluxDB", "ok", True)
     fin_marco(ini)
     # C
-    ini = y[0]; marco("C · Clave ausente o incorrecta", "IT-API-03/04 · IT-API-19")
-    msg("esp", "api", "POST /lecturas con X-API-Key errónea")
-    msg("api", "esp", "401  · sin tocar la BD", "bad", True)
-    nota("esp", "conserva la muestra y espera 2 → 4 → 8 … 60 s", "tbad")
+    ini = y[0]; marco("C · Clave ausente, cliente no registrado o valor imposible", "IT-API-03/04 · 23 · 24")
+    msg("esp", "api", "POST con X-API-Key errónea")
+    msg("api", "esp", "401  · sin tocar las bases", "bad", True)
+    msg("esp", "api", "POST con 250 °C (fuera de rango físico)")
+    msg("api", "esp", "422  · no llega a InfluxDB", "bad", True)
+    nota("esp", "401/403: conserva la muestra y espera 2 → 4 → 8 … 60 s · 422: la descarta", "tbad")
     fin_marco(ini)
     # D
-    ini = y[0]; marco("D · API o BD caída y recuperación", "IT-API-20 · IT-DB-11 · IT-NET-03")
+    ini = y[0]; marco("D · InfluxDB caído y recuperación", "IT-DB-11 · IT-DB-12 · IT-NET-03")
     msg("esp", "api", "POST /lecturas {seq=8}")
-    msg("api", "esp", "sin respuesta (timeout 5 s) o 5xx / 503", "warn", True)
+    msg("api", "pg", "INSERT marca (sensor, seq=8)")
+    msg("api", "inf", "write_lp → error / timeout", "warn", True)
+    msg("api", "pg", "DELETE marca (sensor, seq=8)")
+    msg("api", "esp", "503  · la marca se libera", "warn", True)
     nota("esp", "encola seq=8…20 mientras dura la caída", "tk-warn")
     msg("esp", "api", "POST /lecturas/batch [seq 8 … 20]   (10 por lote)")
-    msg("api", "db", "INSERT × 13 · UNIQUE evita repetidos")
     msg("api", "esp", "200 {insertadas: 13, duplicadas: 0}", "ok", True)
     fin_marco(ini)
     # E
     ini = y[0]; marco("E · Verificación", "IT-E2E-01/02 · simulador --verify")
-    msg("ver", "api", "GET /lecturas?device_id=…&limit=1000 + X-API-Key")
-    msg("api", "db", "SELECT lecturas + mediciones")
+    msg("ver", "api", "GET /lecturas?cliente=…&sensor=…&limit=1000 + X-API-Key")
+    msg("api", "inf", "consulta Flux (pivot por seq)")
     msg("api", "ver", "200 [lecturas]", "ok", True)
     nota("ver", "compara con los seq enviados: faltan = 0 · duplicadas = 0", "tokk")
     fin_marco(ini)
@@ -330,18 +338,19 @@ def secuencia():
     s.p[idx_vida:idx_vida] = [f'<line class="life" x1="{X[k]}" y1="56" x2="{X[k]}" y2="{y[0] - 6}"/>' for k in X]
 
     pagina("secuencia_pruebas.html", "Secuencia de las pruebas",
-           "Cinco escenarios entre el ESP32, la API y PostgreSQL (más el verificador): qué mensajes se cruzan y qué respuesta se espera.",
+           "Cinco escenarios entre el ESP32, la API, PostgreSQL e InfluxDB (más el verificador): qué mensajes se cruzan y qué respuesta se espera.",
            s.render(),
            "Las líneas discontinuas son respuestas. Verde = éxito, ámbar = degradación recuperable, rojo = rechazo. "
-           "El escenario D es el que justifica la cola en el ESP32 y el endpoint <code>/batch</code>.",
-           ["A y B muestran por qué <code>(device_id, seq)</code> es la clave de idempotencia: el reintento recibe 200 y no genera otra fila.",
-            "En C la API responde sin consultar la BD; el ESP32 <strong>no descarta</strong> la muestra porque un 401 es un problema de configuración, no del dato.",
-            "En D la BD caída se ve igual que la API caída desde el ESP32 (5xx o timeout); <code>/health</code> distingue ambos casos (503 = BD)."])
+           "El escenario D es el que justifica la cola en el ESP32, el endpoint <code>/batch</code> y la liberación de la marca de seq.",
+           ["A y B muestran por qué <code>(sensor, seq)</code> es la clave de idempotencia: PostgreSQL la garantiza con una clave primaria y el reintento recibe 200 sin escribir otra vez en InfluxDB.",
+            "En C la API responde sin consultar InfluxDB; con 401/403 el ESP32 <strong>no descarta</strong> la muestra (es un problema de configuración) y con 422 sí (el dato es inválido).",
+            "En D, si InfluxDB falla se borra la marca de seq para que el reintento no se tome por duplicado; <code>/health</code> distingue qué base cayó (503 con <code>postgres</code> o <code>influxdb</code> en «sin conexión»).",
+            "InfluxDB 2.x tarda unas décimas de segundo en hacer visible una escritura: las verificaciones consultan con reintentos hasta 10 s."])
 
 
 # ---------------------------------------------------------------- 4. despliegue AWS
 def despliegue():
-    s = Svg(1060, 510, "Despliegue en AWS Learner Lab: una EC2 con docker compose y tres contenedores; el ESP32 llega al puerto 8000, tu navegador a Grafana en el 3000 y tu PC por SSH; PostgreSQL no publica puertos", y0=34)
+    s = Svg(1060, 510, "Despliegue en AWS Learner Lab: una EC2 con docker compose y cuatro contenedores; el ESP32 llega al puerto 8000, tu navegador a Grafana en el 3000 y tu PC por SSH; InfluxDB y PostgreSQL no publican puertos", y0=34)
     s.box(20, 105, 200, 70, "ESP32", ["en el WiFi del laboratorio"])
     s.box(20, 200, 200, 70, "Tu PC", ["SSH · simulador"])
     s.box(20, 295, 200, 70, "Navegador", ["dashboards de Grafana"])
@@ -350,40 +359,41 @@ def despliegue():
     s.rect(350, 90, 670, 230, "sg")
     s.text(364, 108, "nextguard-sg · EC2 t3.medium (t3.large si se añaden servicios) · Amazon Linux 2023 · docker compose", "tz", "start")
 
-    s.box(372, 130, 190, 100, "api", ["FastAPI · uvicorn", "TCP 8000 · 512 MB"], "box acc")
-    s.box(592, 130, 190, 100, "grafana", ["grafana-oss :3000", "datasource PostgreSQL"], "box acc")
-    s.box(812, 130, 190, 100, "db", ["postgres:16 · sin puertos", "volumen pgdata"], "box acc")
-    s.line([(562, 180), (592, 180)], arrow=False)
-    s.line([(782, 180), (812, 180)], arrow=False)
-    s.text(710, 262, "red «backend»: api y grafana resuelven db:5432", "ts", "start")
-    s.box(372, 270, 190, 44, "Elastic IP", ["asociada a la instancia"], "box")
+    s.box(366, 130, 148, 100, "api", ["FastAPI · uvicorn", "TCP 8000 · 512 MB"], "box acc")
+    s.box(530, 130, 148, 100, "grafana", ["grafana 11.3", "TCP 3000 · token lectura"], "box acc")
+    s.box(694, 130, 148, 100, "influxdb", ["influxdb 2.7", "sin puertos · influx-data"], "box acc")
+    s.box(858, 130, 148, 100, "postgres", ["postgres 16", "sin puertos · pg-data"], "box acc")
+    s.text(626, 292, "red «backend»: influxdb:8086 · postgres:5432", "ts", "start")
+    s.box(366, 270, 190, 40, "Elastic IP", ["asociada a la instancia"], "box")
 
-    s.line([(220, 140), (372, 140)], "ok")
+    s.line([(220, 140), (366, 140)], "ok")
     s.text(290, 132, "TCP 8000", "ts")
     s.line([(220, 235), (350, 235)], "ok")
     s.text(285, 227, "TCP 22", "ts")
     s.text(285, 251, "solo Mi IP", "ts")
-    s.line([(220, 335), (687, 335), (687, 230)], "ok")
+    s.line([(220, 335), (604, 335), (604, 230)], "ok")
     s.text(240, 327, "TCP 3000", "ts", "start")
 
     s.line([(120, 365), (120, 395), (830, 395)], "bad", arrow=False, dash=True)
     s.cross(850, 395)
-    s.text(480, 391, "TCP 5432 desde tu PC / Internet: descartado", "tbad")
+    s.text(480, 391, "TCP 8086 y 5432 desde tu PC / Internet: descartado", "tbad")
 
     s.rect(20, 410, 1020, 90, "box")
     s.text(36, 430, "REGLAS DE ENTRADA", "tz", "start")
     s.text(36, 450, "nextguard-sg  ←  TCP 8000  desde 0.0.0.0/0 (o solo la IP pública de tu WiFi, más estricto)  ·  TCP 3000  solo desde «Mi IP» (/32)", "t", "start")
     s.text(36, 468, "nextguard-sg  ←  TCP 22  solo desde «Mi IP» (/32); si tu IP pública cambia, actualiza las reglas 22 y 3000", "t", "start")
-    s.text(36, 486, "TCP 5432  sin regla de entrada y sin puerto publicado en compose: solo existe dentro de la red docker", "t", "start")
+    s.text(36, 486, "TCP 8086 (InfluxDB) y 5432 (PostgreSQL): sin regla de entrada y sin puerto publicado en compose: solo existen dentro de la red docker", "t", "start")
 
     pagina("despliegue_aws.html", "Despliegue en AWS",
            "Recursos del Learner Lab y qué regla de red permite cada conexión.",
            s.render(),
-           "Flechas verdes = conexiones permitidas. La línea roja discontinua es la que debe rechazarse: PostgreSQL no publica su puerto y el "
-           "Security Group no tiene regla para 5432.",
-           ["La sesión del laboratorio dura unas 4 h: al terminar, la EC2 se detiene. Sin Elastic IP, la IP pública cambia y hay que actualizar <code>API_HOST</code> en <code>config.h</code>. "
-            "Los contenedores usan <code>restart: unless-stopped</code> y los datos viven en volúmenes nombrados, así que el stack vuelve solo al iniciar la EC2: el reinicio de la instancia ya se probó (IT-ENV-05, IT-ENV-08, IT-NFR-07).",
-            "Detén la EC2 al cerrar cada sesión para no consumir presupuesto. Con el Elastic IP asociado, la IP de la API no cambia entre reinicios; los tipos de instancia disponibles pueden variar por laboratorio.",
+           "Flechas verdes = conexiones permitidas. La línea roja discontinua es la que debe rechazarse: ni InfluxDB ni PostgreSQL publican su puerto y el "
+           "Security Group no tiene reglas para 8086 ni 5432.",
+           ["La sesión del laboratorio dura unas 4 h: al terminar, la EC2 se detiene. Con la Elastic IP asociada la dirección de la API no cambia entre reinicios. "
+            "Los contenedores usan <code>restart: unless-stopped</code> y los datos viven en volúmenes nombrados, así que el stack vuelve solo al iniciar la EC2 "
+            "(reinicio probado: IT-ENV-05, IT-ENV-08, IT-NFR-07).",
+            "Los tokens de InfluxDB se crean al inicializar el volumen: la API recibe uno de lectura y escritura y Grafana uno de <strong>solo lectura</strong>, cada uno en su propio volumen.",
+            "Detén la EC2 al cerrar cada sesión para no consumir presupuesto. Los tipos de instancia disponibles pueden variar por laboratorio.",
             "Pasos de creación y comprobación en <code>docs/deploy_ec2.md</code> y <code>scripts/smoke_env.sh</code> (incluye <code>--externo</code> para el caso rojo)."])
 
 
@@ -395,7 +405,7 @@ def niveles():
         por.setdefault(c["nivel"], []).append(c)
     W = 1060
     s = Svg(W, 470, "Qué componentes integra cada nivel de prueba, en orden de ejecución, con el número de casos por nivel")
-    comp = [("Sensor DHT", "GPIO"), ("ESP32", "WiFi"), ("Red / Internet", "HTTP"), ("API · Docker", "SQL"), ("BD · PostgreSQL", None)]
+    comp = [("DHT11 · MQ135", "GPIO"), ("ESP32", "WiFi"), ("Red / Internet", "HTTP"), ("API · Docker", "HTTP"), ("InfluxDB + PG", None)]
     cx = [110, 280, 450, 620, 790]
     for (t, e), x in zip(comp, cx):
         s.box(x - 60, 20, 120, 46, t, [], "box acc")
@@ -440,14 +450,74 @@ def niveles():
             "Los estados y resultados se registran en <code>casos_de_prueba.xlsx</code>; la hoja <em>Resumen</em> recalcula el avance por nivel."])
 
 
+# ---------------------------------------------------------------- 6. Gantt
+def gantt():
+    # (tarea, semana inicio, semana fin, estado). Semanas 10 a 16; estado: ok = hecho, warn = en curso, acc = pendiente.
+    tareas = [
+        ("Stack local: API + InfluxDB + PostgreSQL + Grafana", 10, 10, "ok", "Infraestructura"),
+        ("API: contrato, validaciones, idempotencia", 10, 10, "ok", "API"),
+        ("Pruebas automáticas, simulador y colección Postman", 10, 10, "ok", "Pruebas"),
+        ("Firmware: portal cautivo, DHT11 y MQ135 (compila)", 10, 11, "warn", "Dispositivo"),
+        ("Plan maestro, diagramas de componentes y Gantt", 10, 11, "warn", "Entregables"),
+        ("Cableado y prueba con sensores reales", 11, 12, "acc", "Dispositivo"),
+        ("Despliegue de la nueva versión en la EC2 (reinicio probado)", 10, 10, "ok", "Infraestructura"),
+        ("Validaciones de la API y pruebas con Postman en la EC2", 10, 10, "ok", "Pruebas"),
+        ("Clientes y sensores en PostgreSQL + dashboard por cliente", 14, 14, "acc", "Datos"),
+        ("Despliegue automatizado (Ansible)", 14, 14, "acc", "Infraestructura"),
+        ("Alertas (Grafana Alerting) y destinatarios", 15, 15, "acc", "Datos"),
+        ("Pruebas de calidad del flujo completo", 15, 15, "acc", "Pruebas"),
+        ("Demo extremo a extremo y diagramas del flujo", 16, 16, "acc", "Entregables"),
+    ]
+    fechas = {10: "13–17 oct", 11: "20–24 oct*", 12: "26–31 oct", 13: "2–7 nov", 14: "9–14 nov", 15: "16–21 nov", 16: "23–28 nov*"}
+    x0, ancho = 440, 88                      # inicio de la grilla y ancho por semana
+    y0, alto = 74, 30
+    H = y0 + alto * len(tareas) + 90
+    s = Svg(1080, H, "Diagrama de Gantt de las semanas 10 a 16: qué está hecho, en curso y pendiente hacia la Evaluación 2 y la Evaluación 3")
+    s.text(24, 28, "ACTIVIDAD", "tz", "start")
+    for i, sem in enumerate(range(10, 17)):
+        x = x0 + i * ancho
+        s.rect(x, 12, ancho - 4, 44, "tab", 4)
+        s.text(x + (ancho - 4) / 2, 30, f"Sem {sem}", "tb")
+        s.text(x + (ancho - 4) / 2, 46, fechas[sem], "ts")
+        s.p.append(f'<line class="guide" x1="{x - 2}" y1="{y0 - 6}" x2="{x - 2}" y2="{y0 + alto * len(tareas)}"/>')
+    s.p.append(f'<line class="guide" x1="{x0 + 7 * ancho - 2}" y1="{y0 - 6}" x2="{x0 + 7 * ancho - 2}" y2="{y0 + alto * len(tareas)}"/>')
+    estilo = {"ok": "bar", "warn": "f-warn", "acc": "bar soft"}
+    for k, (nombre, a, b, est, grupo) in enumerate(tareas):
+        y = y0 + k * alto
+        s.text(24, y + 20, nombre, "t", "start")
+        xa = x0 + (a - 10) * ancho
+        wb = (b - a + 1) * ancho - 4
+        s.rect(xa, y + 4, wb, alto - 10, estilo[est], 6)
+        etiqueta = {"ok": "hecho", "warn": "en curso", "acc": "pendiente"}[est]
+        s.text(xa + wb / 2, y + 20, f"{grupo} · {etiqueta}" if wb >= 170 else etiqueta, "ts")
+    # hitos de evaluación
+    ybase = y0 + alto * len(tareas) + 18
+    for sem, nombre in ((11, "Evaluación 2"), (16, "Evaluación 3")):
+        xm = x0 + (sem - 10) * ancho + ancho - 6
+        s.p.append(f'<line class="edge e-bad dash" x1="{xm}" y1="{y0 - 6}" x2="{xm}" y2="{ybase}"/>')
+        s.badge(xm, ybase + 14, "E" + nombre[-1], "bad")
+        s.text(xm - 22, ybase + 18, nombre, "tbad", "end")
+    s.text(24, ybase + 56, "* Fechas de las semanas 11 y 16 estimadas a partir del calendario de las demás semanas.", "ts", "start")
+
+    pagina("gantt.html", "Gantt del proyecto",
+           "Semanas 10 a 16 del cronograma SIY6122: lo que ya está hecho, lo que está en curso y lo que falta hasta la demo final.",
+           s.render(),
+           "Verde con borde azul = hecho; ámbar punteado = en curso; azul punteado = pendiente. Las líneas rojas marcan las evaluaciones 2 (semana 11) y 3 (semana 16). "
+           "Las actividades siguen los hitos sugeridos en la clase «Del sensor a Grafana».",
+           ["<strong>Evaluación 2</strong> pide el dispositivo enviando por WiFi con su portal cautivo, el diagrama de componentes (<code>arquitectura.html</code>) y este Gantt.",
+            "El despliegue en la EC2 y las pruebas con Postman (<code>docs/postman/</code>) ya se adelantaron a la semana 10; las semanas 12 y 13 quedan para la prueba con el hardware real y los fallos inducidos.",
+            "La semana 14 incorpora los clientes y sensores en PostgreSQL y el despliegue automatizado; la 15, las alertas y las pruebas de calidad del flujo completo."])
+
+
 # ---------------------------------------------------------------- índice
 def indice():
     tarjetas = [
         ("arquitectura.html", "Arquitectura bajo prueba", "Componentes, red y qué tramo cubre cada nivel."),
         ("flujo_datos.html", "Recorrido de una lectura", "Siete pasos y qué pasa cuando algo falla en cada uno."),
         ("secuencia_pruebas.html", "Secuencia de las pruebas", "Camino feliz, duplicado, 401, caída y verificación."),
-        ("despliegue_aws.html", "Despliegue en AWS", "Una EC2 con tres contenedores, Security Group y reglas de entrada."),
+        ("despliegue_aws.html", "Despliegue en AWS", "Una EC2 con cuatro contenedores, Security Group y reglas de entrada."),
         ("estrategia_niveles.html", "Niveles de prueba", "N0 a N6, componentes que integra cada uno y conteo de casos."),
+        ("gantt.html", "Gantt del proyecto", "Semanas 10 a 16: hecho, en curso y pendiente hacia las evaluaciones 2 y 3."),
     ]
     cards = "".join(f'<a class="card" href="{h}"><h2>{esc(t)}</h2><p>{esc(d)}</p></a>' for h, t, d in tarjetas)
     doc = f"""<!doctype html>
@@ -455,7 +525,7 @@ def indice():
 <meta name="color-scheme" content="light dark"><title>Diagramas del plan</title><style>{CSS}</style></head>
 <body><main><nav><a href="index.html" aria-current="page">Índice</a></nav>
 <h1>Diagramas del plan de integración</h1>
-<p class="lead">ESP32 → API Python → PostgreSQL → Grafana, en contenedores Docker sobre una EC2 (AWS Learner Lab). Cada página contiene un diagrama y las notas para leerlo.</p>
+<p class="lead">ESP32 (DHT11 + MQ135) → API Python → InfluxDB + PostgreSQL → Grafana, en contenedores Docker sobre una EC2 (AWS Learner Lab). Cada página contiene un diagrama y las notas para leerlo.</p>
 <div class="cards">{cards}</div></main></body></html>
 """
     with open(os.path.join(SALIDA, "index.html"), "w", encoding="utf-8") as f:
@@ -464,5 +534,5 @@ def indice():
 
 if __name__ == "__main__":
     os.makedirs(SALIDA, exist_ok=True)
-    indice(); arquitectura(); flujo_datos(); secuencia(); despliegue(); niveles()
+    indice(); arquitectura(); flujo_datos(); secuencia(); despliegue(); niveles(); gantt()
     print("Diagramas generados en", SALIDA)

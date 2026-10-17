@@ -1,0 +1,610 @@
+{
+  "info": {
+    "name": "NextGuard · API de sensores",
+    "description": "Pruebas de la API (semana 12-13). Variables: baseUrl, apiKey, cliente. Ejecutar en orden con el Collection Runner; en el Runner use un retraso de ~1200 ms entre peticiones (InfluxDB 2.x tarda unas décimas de segundo en hacer visible una escritura). Por consola: npx newman run NextGuard.postman_collection.json --delay-request 1200",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "apiKey",
+      "value": "clave-local"
+    },
+    {
+      "key": "cliente",
+      "value": "cliente-postman"
+    },
+    {
+      "key": "sensor",
+      "value": "sensor-postman"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Estado (/health)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('ambas bases ok', () => { const j = pm.response.json(); pm.expect(j.postgres).to.eql('ok'); pm.expect(j.influxdb).to.eql('ok'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 · Registrar cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/clientes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "clientes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_cliente\": \"{{cliente}}\",\n  \"nombre\": \"Cliente Postman\",\n  \"email\": \"postman@ejemplo.cl\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('sensor', 'postman-' + Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 creado o 409 ya existía', () => pm.expect([201, 409]).to.include(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 · Sin API key => 401",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sensor\": \"{{sensor}}\",\n  \"cliente\": \"{{cliente}}\",\n  \"ubicacion\": \"Postman\",\n  \"seq\": 1,\n  \"mediciones\": [\n    {\n      \"tipo\": \"temperatura\",\n      \"valor\": 22.5,\n      \"unidad\": \"C\"\n    },\n    {\n      \"tipo\": \"humedad\",\n      \"valor\": 48,\n      \"unidad\": \"%\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 · Lectura del formato de la clase => 201",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sensor\": \"{{sensor}}\",\n  \"cliente\": \"{{cliente}}\",\n  \"ubicacion\": \"Sede AV - Lab 3\",\n  \"tipo\": \"temperatura\",\n  \"valor\": 22.5,\n  \"unidad\": \"C\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+              "pm.test('estado guardado', () => pm.expect(pm.response.json().estado).to.eql('guardado'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 · Lectura con varias magnitudes y seq => 201",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sensor\": \"{{sensor}}\",\n  \"cliente\": \"{{cliente}}\",\n  \"ubicacion\": \"Postman\",\n  \"seq\": 1,\n  \"mediciones\": [\n    {\n      \"tipo\": \"temperatura\",\n      \"valor\": 22.5,\n      \"unidad\": \"C\"\n    },\n    {\n      \"tipo\": \"humedad\",\n      \"valor\": 48,\n      \"unidad\": \"%\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 · Mismo seq (reintento) => 200 duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sensor\": \"{{sensor}}\",\n  \"cliente\": \"{{cliente}}\",\n  \"ubicacion\": \"Postman\",\n  \"seq\": 1,\n  \"mediciones\": [\n    {\n      \"tipo\": \"temperatura\",\n      \"valor\": 22.5,\n      \"unidad\": \"C\"\n    },\n    {\n      \"tipo\": \"humedad\",\n      \"valor\": 48,\n      \"unidad\": \"%\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('duplicado', () => pm.expect(pm.response.json().duplicado).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 · Fuera de rango (250 °C) => 422",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sensor\": \"{{sensor}}\",\n  \"cliente\": \"{{cliente}}\",\n  \"tipo\": \"temperatura\",\n  \"valor\": 250,\n  \"unidad\": \"C\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 422', () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 · Cliente no registrado => 403",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sensor\": \"{{sensor}}\",\n  \"cliente\": \"no-existe-xyz\",\n  \"tipo\": \"temperatura\",\n  \"valor\": 20,\n  \"unidad\": \"C\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 403', () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 · Formato inválido => 422",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sensor\": \"sensor con espacios;\",\n  \"cliente\": \"{{cliente}}\",\n  \"tipo\": \"temperatura\",\n  \"valor\": 20,\n  \"unidad\": \"C\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 422', () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 · Timestamp en el futuro => 422",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sensor\": \"{{sensor}}\",\n  \"cliente\": \"{{cliente}}\",\n  \"tipo\": \"temperatura\",\n  \"valor\": 20,\n  \"unidad\": \"C\",\n  \"timestamp\": \"2999-01-01T00:00:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 422', () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 · Lote => 200",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/lecturas/batch",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "lecturas",
+            "batch"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"lecturas\": [\n    {\n      \"sensor\": \"{{sensor}}\",\n      \"cliente\": \"{{cliente}}\",\n      \"ubicacion\": \"Postman\",\n      \"seq\": 2,\n      \"mediciones\": [\n        {\n          \"tipo\": \"temperatura\",\n          \"valor\": 22.5,\n          \"unidad\": \"C\"\n        },\n        {\n          \"tipo\": \"humedad\",\n          \"valor\": 48,\n          \"unidad\": \"%\"\n        }\n      ]\n    },\n    {\n      \"sensor\": \"{{sensor}}\",\n      \"cliente\": \"{{cliente}}\",\n      \"ubicacion\": \"Postman\",\n      \"seq\": 3,\n      \"mediciones\": [\n        {\n          \"tipo\": \"temperatura\",\n          \"valor\": 22.5,\n          \"unidad\": \"C\"\n        },\n        {\n          \"tipo\": \"humedad\",\n          \"valor\": 48,\n          \"unidad\": \"%\"\n        }\n      ]\n    },\n    {\n      \"sensor\": \"{{sensor}}\",\n      \"cliente\": \"{{cliente}}\",\n      \"ubicacion\": \"Postman\",\n      \"seq\": 1,\n      \"mediciones\": [\n        {\n          \"tipo\": \"temperatura\",\n          \"valor\": 22.5,\n          \"unidad\": \"C\"\n        },\n        {\n          \"tipo\": \"humedad\",\n          \"valor\": 48,\n          \"unidad\": \"%\"\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('2 nuevas y 1 duplicada', () => { const j = pm.response.json(); pm.expect(j.insertadas).to.eql(2); pm.expect(j.duplicadas).to.eql(1); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 · Sensores del cliente",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/clientes/{{cliente}}/sensores",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "clientes",
+            "{{cliente}}",
+            "sensores"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('incluye el sensor', () => pm.expect(pm.response.json().map(s => s.sensor)).to.include(pm.collectionVariables.get('sensor')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 · Lecturas del sensor (InfluxDB)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/clientes/{{cliente}}/sensores/{{sensor}}/lecturas?limite=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "clientes",
+            "{{cliente}}",
+            "sensores",
+            "{{sensor}}",
+            "lecturas"
+          ],
+          "query": [
+            {
+              "key": "limite",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('hay lecturas', () => pm.expect(pm.response.json().length).to.be.above(0));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

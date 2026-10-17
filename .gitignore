@@ -9,7 +9,7 @@ __pycache__/
 *.db
 
 # Docker / despliegue
-deploy/.env
+.env
 *.pid
 
 # Editor / sistema

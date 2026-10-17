@@ -18,19 +18,49 @@ jobs:
             requirements-dev.txt
             api/requirements.txt
       - run: pip install -r requirements-dev.txt
-      - run: python scripts/casos_de_prueba.py
-      - run: pytest -q
+      - name: Casos de prueba coherentes
+        run: python scripts/casos_de_prueba.py
+      - name: pytest (memoria y SQLite)
+        run: pytest -q
 
-  docker:
+  integracion:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validar docker-compose
-        run: docker compose --env-file deploy/.env.example -f deploy/docker-compose.yml config -q
-      - name: Construir la imagen de la API
-        run: docker build -t nextguard-api api
-      - name: Validar JSON del dashboard de Grafana
-        run: python3 -m json.tool deploy/grafana/dashboards/nextguard.json > /dev/null
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validar docker-compose y el dashboard de Grafana
+        run: |
+          cp .env.example .env
+          docker compose config -q
+          python3 -m json.tool grafana/dashboards/nextguard.json > /dev/null
+      - name: Levantar el stack (InfluxDB + PostgreSQL + API + Grafana)
+        run: |
+          sed -i 's/=cambiar$/=Ci-1234-xyz/; s/^API_KEYS=.*/API_KEYS=clave-ci/' .env
+          docker compose up -d --build --wait --wait-timeout 180
+          docker compose ps
+      - name: Prueba de humo y simulador con verificación
+        run: |
+          pip install requests
+          API_URL=http://localhost:8000 API_KEY=clave-ci GRAFANA_URL=http://localhost:3000 bash scripts/smoke_env.sh
+          python scripts/simulador_sensor.py --url http://localhost:8000 --api-key clave-ci --devices 3 --count 15 --dup-rate 0.2 --bad-rate 0.2 --with-mq --verify
+      - name: Token de Grafana de solo lectura
+        run: |
+          docker compose exec -T influxdb sh -c 'T=$(cat /tokens-grafana/token); test "$(curl -s -o /dev/null -w %{http_code} -X POST "http://localhost:8086/api/v2/write?org=duoc&bucket=sensores" -H "Authorization: Token $T" --data-binary "prueba valor=1")" = 403'
+      - name: pytest contra InfluxDB y PostgreSQL reales
+        run: |
+          T=$(docker compose exec -T api cat /tokens/token)
+          docker compose exec -T postgres psql -U iot -d iot -c 'CREATE DATABASE iot_test'
+          docker run --rm --network nextguard_backend -v "$PWD":/r:ro -w /tmp \
+            -e TEST_INFLUX_URL=http://influxdb:8086 -e TEST_INFLUX_TOKEN="$T" \
+            -e TEST_DATABASE_URL=postgresql+psycopg://iot:Ci-1234-xyz@postgres:5432/iot_test \
+            -e PYTHONDONTWRITEBYTECODE=1 python:3.12-slim \
+            sh -c "cp -r /r /tmp/r && cd /tmp/r && pip -q install -r requirements-dev.txt && python -m pytest -q -p no:cacheprovider"
+      - name: Registros si algo falla
+        if: failure()
+        run: docker compose logs --tail=80
+      - run: docker compose down -v
 
   secretos:
     runs-on: ubuntu-latest

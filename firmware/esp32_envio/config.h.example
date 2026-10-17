@@ -1,24 +1,31 @@
 // Copiar a config.h (y NO subirlo a ningún repositorio).
+// Valores por defecto que aparecen en el portal cautivo la primera vez; luego se guardan en la flash.
+// El WiFi (SSID y clave) NO va aquí: se ingresa en el portal cautivo (red SENSOR-XXXX, http://192.168.4.1).
 #pragma once
 
-// --- WiFi (el ESP32 solo soporta 2.4 GHz) ---
-#define WIFI_SSID      "TU_SSID"
-#define WIFI_PASSWORD  "TU_CLAVE"
+// --- Servidor (IP elástica de la EC2) y API key. Se pueden cambiar desde el portal ---
+#define SERVIDOR_DEFECTO   "http://0.0.0.0:8000"
+#define API_KEY_DEFECTO    "CAMBIAR"
+#define CLIENTE_DEFECTO    "cliente-001"
+#define SENSOR_DEFECTO     "esp32-01"
+#define UBICACION_DEFECTO  "Laboratorio"
+#define CICLO_S_DEFECTO    10           // segundos entre lecturas (5 a 3600)
+#define FW_VERSION         "2.0.0"
+#define HTTP_TIMEOUT_MS    5000
 
-// --- API (IP de la EC2 / Elastic IP / DNS). Cambia en cada sesión si no usas Elastic IP ---
-#define API_HOST       "0.0.0.0"
-#define API_PORT       8000
-#define API_KEY        "CAMBIAR"
-#define USE_HTTPS      0          // 1 = WiFiClientSecure (setInsecure() solo para pruebas)
+// --- Sensores ---
+// USE_DHT: 0 = valores simulados (sin hardware), 1 = DHT real
+#define USE_DHT            0
+#define DHT_PIN            4            // DATA del DHT11 (módulo HW-036: S, +, -)
+#define DHT_TYPE           DHT11        // DHT11 o DHT22
 
-// --- Identidad y periodo ---
-#define DEVICE_ID      "esp32-01"
-#define UBICACION      "Laboratorio"
-#define FW_VERSION     "1.0.0"
-#define INTERVALO_MS   10000UL    // periodo de muestreo
-#define HTTP_TIMEOUT_MS 5000
+// USE_MQ135: 0 = sin sensor, 1 = MQ135 real, 2 = valores simulados
+//   AO -> divisor resistivo (p. ej. 10 kΩ arriba / 20 kΩ abajo) -> GPIO34 (ADC1: compatible con WiFi).
+//   El módulo se alimenta a 5 V (VIN); NUNCA conectar AO directo a un GPIO (máximo 3,3 V).
+#define USE_MQ135          0
+#define MQ135_PIN          34
+#define MQ135_PRECALENTAMIENTO_MS 180000UL   // 3 min tras cada arranque (la primera vez conviene >= 24 h)
 
-// --- Sensor ---
-#define USE_DHT        0          // 0 = valores simulados (sin hardware), 1 = DHT real
-#define DHT_PIN        4
-#define DHT_TYPE       DHT22      // DHT11 o DHT22
+// --- Seguridad (solo pruebas) ---
+#define USE_HTTPS          0            // 1 = WiFiClientSecure con setInsecure()
+#define PIN_RESET_CONFIG   0            // BOOT: mantenido 3 s al encender borra WiFi y configuración
