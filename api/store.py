@@ -103,7 +103,7 @@ class InfluxStore:
         flux = f'''
 from(bucket: "{self.bucket}")
   |> range(start: {desde.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}, stop: {hasta.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
-  |> filter(fn: (r) => {cond})
+  |> filter(fn: (r) => exists r.cliente and exists r.sensor and exists r.unidad and {cond})
   |> pivot(rowKey: ["_time", "_measurement", "sensor", "cliente", "unidad"], columnKey: ["_field"], valueColumn: "_value")
   |> group()
   |> sort(columns: ["_time"], desc: true)

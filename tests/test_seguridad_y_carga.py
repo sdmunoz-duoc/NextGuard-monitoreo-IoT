@@ -5,44 +5,52 @@ import time
 import pytest
 from sqlalchemy import func, inspect, select
 
-from conftest import payload
-from models import Lectura
+from conftest import CLIENTE, payload
+from models import Sensor
 
 URL = "/api/v1/lecturas"
 
 
-def test_it_sec_01_inyeccion_sql_en_device_id_rechazada(client):
-    r = client.post(URL, json=payload(device_id="x'; DROP TABLE lectura;--"))
+def test_it_sec_01_inyeccion_sql_en_sensor_rechazada(client):
+    r = client.post(URL, json=payload(sensor="x'; DROP TABLE sensores;--"))
     assert r.status_code == 422
 
 
 def test_it_sec_02_inyeccion_sql_en_texto_libre_se_guarda_literal(client):
-    trampa = "'); DROP TABLE dispositivo;--"
+    trampa = "'); DROP TABLE sensores;--"
     assert client.post(URL, json=payload(seq=1, ubicacion=trampa)).status_code == 201
     with client.app_.state.SessionLocal() as db:
-        assert "dispositivo" in inspect(db.get_bind()).get_table_names()
-        assert db.scalar(select(func.count()).select_from(Lectura)) == 1
+        assert "sensores" in inspect(db.get_bind()).get_table_names()
+        assert db.scalar(select(func.count()).select_from(Sensor)) == 1
+    assert client.get(URL).json()[0]["ubicacion"] == trampa
 
 
-def test_it_sec_03_inyeccion_sql_en_filtro_get_rechazada(client):
-    r = client.get(URL, params={"device_id": "a' OR '1'='1"})
-    assert r.status_code == 422
+def test_it_sec_03_inyeccion_en_filtro_get_rechazada(client):
+    assert client.get(URL, params={"sensor": "a' OR '1'='1"}).status_code == 422
+    assert client.get(URL, params={"cliente": 'a") |> drop() //'}).status_code == 422   # inyección Flux
 
 
-def test_it_sec_04_magnitud_con_caracteres_no_permitidos_422(client):
+def test_it_sec_04_tipo_con_caracteres_no_permitidos_422(client):
     p = payload()
-    p["mediciones"][0]["magnitud"] = "temp; DROP"
+    p["mediciones"][0]["tipo"] = "temp; DROP"
     assert client.post(URL, json=p).status_code == 422
 
 
-def test_it_sec_05_sin_claves_configuradas_se_rechaza_todo(tmp_path):
-    from config import Settings
-    from fastapi.testclient import TestClient
-    from main import create_app
+def test_it_sec_05_sin_claves_configuradas_se_rechaza_todo(client_factory):
+    c = client_factory(api_keys=[])
+    assert c.post(URL, json=payload(), headers={"X-API-Key": "cualquiera"}).status_code == 401
 
-    app = create_app(Settings(database_url=f"sqlite:///{tmp_path}/a.db", api_keys=[]))
-    with TestClient(app) as c:
-        assert c.post(URL, json=payload(), headers={"X-API-Key": "cualquiera"}).status_code == 401
+
+def test_it_sec_10_endpoints_de_clientes_exigen_api_key(client):
+    sin = {"X-API-Key": ""}
+    assert client.post("/clientes", json={"id_cliente": "x1", "nombre": "X"}, headers=sin).status_code == 401
+    assert client.get("/clientes", headers=sin).status_code == 401
+    assert client.get(f"/clientes/{CLIENTE}/sensores", headers=sin).status_code == 401
+
+
+def test_it_sec_11_identificador_de_cliente_invalido_422(client):
+    assert client.post("/clientes", json={"id_cliente": "a b", "nombre": "X"}).status_code == 422
+    assert client.post("/clientes", json={"id_cliente": "ok", "nombre": "X", "email": "no-es-correo"}).status_code == 422
 
 
 @pytest.mark.carga
