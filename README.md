@@ -97,7 +97,7 @@ Este repositorio es público: `config.h` y `.env` están en `.gitignore` y no de
 
 ## Estado
 
-Ver §10 del plan maestro. Verificado en local: pruebas contra servicios reales, stack Docker completo, dashboard en Flux, token de solo lectura, simulador, Postman y compilación del firmware. Pendiente: despliegue de esta versión en la EC2 y pruebas con hardware (sesiones S1–S7).
+Ver §10 del plan maestro. Desplegado y verificado en la EC2 (smoke 9/9, simulador, Postman 19/19, reinicio de la instancia). Pendiente: pruebas con hardware real (portal cautivo, DHT11, MQ135) y sesiones S3–S7.
 
 ## Licencia
 

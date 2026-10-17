@@ -460,8 +460,8 @@ def gantt():
         ("Firmware: portal cautivo, DHT11 y MQ135 (compila)", 10, 11, "warn", "Dispositivo"),
         ("Plan maestro, diagramas de componentes y Gantt", 10, 11, "warn", "Entregables"),
         ("Cableado y prueba con sensores reales", 11, 12, "acc", "Dispositivo"),
-        ("Despliegue de la nueva versión en la EC2", 12, 13, "acc", "Infraestructura"),
-        ("Validaciones de la API y pruebas con Postman en la EC2", 12, 13, "acc", "Pruebas"),
+        ("Despliegue de la nueva versión en la EC2 (reinicio probado)", 10, 10, "ok", "Infraestructura"),
+        ("Validaciones de la API y pruebas con Postman en la EC2", 10, 10, "ok", "Pruebas"),
         ("Clientes y sensores en PostgreSQL + dashboard por cliente", 14, 14, "acc", "Datos"),
         ("Despliegue automatizado (Ansible)", 14, 14, "acc", "Infraestructura"),
         ("Alertas (Grafana Alerting) y destinatarios", 15, 15, "acc", "Datos"),
@@ -505,7 +505,7 @@ def gantt():
            "Verde con borde azul = hecho; ámbar punteado = en curso; azul punteado = pendiente. Las líneas rojas marcan las evaluaciones 2 (semana 11) y 3 (semana 16). "
            "Las actividades siguen los hitos sugeridos en la clase «Del sensor a Grafana».",
            ["<strong>Evaluación 2</strong> pide el dispositivo enviando por WiFi con su portal cautivo, el diagrama de componentes (<code>arquitectura.html</code>) y este Gantt.",
-            "Las semanas 12 y 13 se agrupan: despliegue en la EC2, validaciones de la API y pruebas con Postman (colección en <code>docs/postman/</code>).",
+            "El despliegue en la EC2 y las pruebas con Postman (<code>docs/postman/</code>) ya se adelantaron a la semana 10; las semanas 12 y 13 quedan para la prueba con el hardware real y los fallos inducidos.",
             "La semana 14 incorpora los clientes y sensores en PostgreSQL y el despliegue automatizado; la 15, las alertas y las pruebas de calidad del flujo completo."])
 
 

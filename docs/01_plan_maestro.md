@@ -299,7 +299,8 @@ Para no confundir lo **diseñado** con lo **comprobado**:
 | `smoke_env.sh` contra el stack local | ✅ 9 de 9 comprobaciones; `--externo` ✅ |
 | Colección Postman (newman) | ✅ 13 peticiones, 19 aserciones, 0 fallos |
 | Firmware `esp32_envio.ino` (portal cautivo, DHT11, MQ135) | ✅ Compila para `esp32:esp32:esp32` en sus 4 combinaciones de sensores (81 % de la flash); ⏳ sin probar en el ESP32 con el portal |
-| Despliegue de esta versión en la EC2 | ⏳ Pendiente (la EC2 corre aún la versión anterior con PostgreSQL) |
+| Despliegue de esta versión en la EC2 (t3.medium, Elastic IP) | ✅ 2026-10-17: stack de 4 contenedores healthy; `smoke_env.sh` 9/9 desde fuera de AWS; `--externo`: 8086 y 5432 cerrados; simulador `--verify` (60 lecturas, 0 faltantes, 0 duplicados, p95 261 ms); token de Grafana → 403 al escribir; Postman 19/19 contra la EC2 |
+| Reinicio de la EC2 con la nueva versión (IT-ENV-05, IT-ENV-08, IT-NFR-07) | ✅ Los 4 contenedores vuelven solos (≈10 s tras el arranque); 60 lecturas antes y 60 después; datasource y dashboard de Grafana intactos |
 | Pruebas con hardware (portal, DHT11, MQ135, E2E hasta Grafana) y sesiones S1–S7 | ⏳ Pendiente |
 | Matriz `.xlsx` | ✅ Regenerada desde `scripts/casos_de_prueba.py`: 104 casos |
 
