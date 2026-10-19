@@ -2,7 +2,7 @@
 
 > Generado desde `scripts/casos_de_prueba.py` (fuente única). Para registrar resultados usa `casos_de_prueba.xlsx` (columnas *Estado*, *Resultado real*, *Evidencia*).
 
-**Total:** 104 casos — 49 automatizados (pytest), 16 semi-automáticos, 39 manuales.
+**Total:** 108 casos — 50 automatizados (pytest), 19 semi-automáticos, 39 manuales.
 
 **Tipo:** A = automatizado · S = semi-automático (script/simulador + revisión) · M = manual. **Prioridad:** Alta = bloquea la aceptación; Media = debe cumplirse; Baja = deseable.
 
@@ -15,7 +15,7 @@
 | N2 | ESP32 ↔ Red WiFi / NTP | 8 | 3 | 0 | 0 | 8 |
 | N2 | ESP32 ↔ API (contrato HTTP) | 32 | 14 | 28 | 0 | 4 |
 | N3 | API ↔ Base de datos | 18 | 11 | 12 | 5 | 1 |
-| N4 | Extremo a extremo | 8 | 4 | 0 | 3 | 5 |
+| N4 | Extremo a extremo | 12 | 8 | 1 | 6 | 5 |
 | N5 | No funcionales | 9 | 4 | 2 | 3 | 4 |
 | N6 | Seguridad básica | 11 | 5 | 7 | 2 | 2 |
 
@@ -30,10 +30,10 @@
 | RF-05 | No se pierden ni se duplican lecturas ante reintentos, cortes o reinicios. | IT-SEN-02, IT-SEN-09, IT-API-02, IT-API-12, IT-API-19, IT-API-20, IT-DB-02, IT-DB-03, IT-DB-16, IT-E2E-01, IT-E2E-03, IT-E2E-04, IT-NFR-02, IT-NFR-08 |
 | RF-06 | Las lecturas pueden consultarse por cliente, sensor y rango de tiempo. | IT-API-14, IT-API-15, IT-API-32, IT-E2E-06 |
 | RF-07 | Se pueden agregar nuevas magnitudes (p. ej. PM2.5) sin cambiar el esquema. | IT-DB-04, IT-E2E-07 |
-| RF-08 | Un dashboard de Grafana muestra las lecturas almacenadas (temperatura, humedad, estado de los dispositivos). | IT-ENV-07, IT-E2E-08 |
+| RF-08 | Un dashboard de Grafana muestra las lecturas almacenadas (temperatura, humedad, estado de los dispositivos). | IT-ENV-07, IT-E2E-08, IT-E2E-09, IT-E2E-10, IT-E2E-11 |
 | RF-09 | El dispositivo se configura sin recompilar mediante un portal cautivo (WiFi, servidor, cliente, sensor, ubicación, ciclo). | IT-NET-06, IT-NET-07 |
 | RF-10 | Clientes y sensores se registran en PostgreSQL; la API rechaza lecturas de clientes no registrados y auto-enrola sensores. | IT-API-23, IT-API-26, IT-API-27, IT-API-30, IT-API-31 |
-| RF-11 | El sistema mide la calidad del aire (MQ135) además de temperatura y humedad (DHT11). | IT-SEN-07, IT-SEN-08, IT-SEN-10, IT-API-29 |
+| RF-11 | El sistema mide la calidad del aire (MQ135) además de temperatura y humedad (DHT11). | IT-SEN-07, IT-SEN-08, IT-SEN-10, IT-API-29, IT-E2E-12 |
 | RNF-01 | Latencia de entrega (ESP32 → BD) con p95 menor a 2 s en condiciones normales. | IT-NFR-01, IT-NFR-03, IT-NFR-04 |
 | RNF-02 | El sistema se recupera solo tras caídas de red, API, BD o energía. | IT-ENV-01, IT-ENV-05, IT-ENV-06, IT-ENV-08, IT-NET-05, IT-API-17, IT-API-21, IT-DB-08, IT-DB-11, IT-DB-12, IT-DB-13, IT-NFR-05, IT-NFR-06, IT-NFR-07, IT-NFR-09 |
 | RNF-03 | Seguridad básica: autenticación, validación de entradas, bases no expuestas, token de Grafana de solo lectura, sin secretos en el código. | IT-ENV-03, IT-API-03, IT-API-04, IT-API-06, IT-API-09, IT-API-13, IT-API-16, IT-DB-18, IT-SEC-01, IT-SEC-02, IT-SEC-03, IT-SEC-04, IT-SEC-05, IT-SEC-06, IT-SEC-07, IT-SEC-08, IT-SEC-09, IT-SEC-10, IT-SEC-11 |
@@ -930,6 +930,47 @@
   3. Comparar el último valor de cada panel con el monitor serie
 - **Datos:** —
 - **Resultado esperado:** Los paneles de temperatura, humedad y calidad del aire muestran los valores del monitor serie (±0,1 °C / ±0,5 %HR) sin huecos.
+
+### IT-E2E-09 — Reglas de alerta de Grafana aprovisionadas y válidas
+
+- **Requisito:** RF-08 · **Prioridad:** Alta · **Tipo:** Automatizado (pytest)
+- **Precondiciones:** —
+- **Pasos:**
+  1. Cargar rules.yml, contactpoints.yml y policies.yml
+  2. Comprobar uids únicos, condición existente, severidad y consulta Flux por regla
+- **Datos:** —
+- **Resultado esperado:** 15 reglas válidas que cubren temperatura, humedad, CO₂, MQ135, WiFi, caída de sensor y falta de ingesta.
+- **Automatización:** `tests/test_alertas.py::test_it_e2e_09_reglas_de_alerta_aprovisionadas_son_validas`
+
+### IT-E2E-10 — Alerta de sensor caído
+
+- **Requisito:** RF-08 · **Prioridad:** Alta · **Tipo:** Semi-automático
+- **Precondiciones:** Stack con las reglas cargadas (GET /api/prometheus/grafana/api/v1/rules sin errores).
+- **Pasos:**
+  1. Enviar lecturas de un sensor con ubicación distinta de «Simulador»
+  2. Dejar de enviar 3 min
+  3. Consultar el estado de la regla «Sensor caído (sin datos)»
+- **Datos:** —
+- **Resultado esperado:** La regla pasa a Firing para ese sensor y llega el correo de la alerta.
+
+### IT-E2E-11 — Alerta por umbral de temperatura, humedad y CO₂
+
+- **Requisito:** RF-08 · **Prioridad:** Alta · **Tipo:** Semi-automático
+- **Precondiciones:** Reglas cargadas; SMTP configurado.
+- **Pasos:**
+  1. Enviar temperatura=40 °C, humedad=90 % y co2_equiv=2500 durante 6 min
+  2. Consultar las reglas
+- **Datos:** 40 °C, 90 %, 2500 ppm
+- **Resultado esperado:** Temperatura alta, Humedad alta y CO₂ crítico/elevado pasan a Firing con etiquetas cliente y sensor.
+
+### IT-E2E-12 — Alerta de MQ135 saturado
+
+- **Requisito:** RF-11 · **Prioridad:** Alta · **Tipo:** Semi-automático
+- **Precondiciones:** Reglas cargadas.
+- **Pasos:**
+  1. Enviar calidad_aire_raw=4095 constante durante 10 min
+- **Datos:** 4095
+- **Resultado esperado:** «MQ135 saturado o sin señal» y «Lectura del MQ135 congelada» pasan a Firing.
 
 
 ## N5 — No funcionales

@@ -1,0 +1,827 @@
+# Generado por scripts/generar_alertas.py — editar la tabla de reglas allí y regenerar.
+apiVersion: 1
+groups:
+- orgId: 1
+  name: nextguard
+  folder: NextGuard
+  interval: 1m
+  rules:
+  - uid: ng-temp-alta
+    title: Temperatura alta
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -3m)\n  |> filter(fn: (r) => r._measurement == \"temperatura\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 35
+    noDataState: OK
+    execErrorState: Error
+    for: 5m
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: 'Temperatura > 35 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
+  - uid: ng-temp-baja
+    title: Temperatura baja
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -3m)\n  |> filter(fn: (r) => r._measurement == \"temperatura\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: lt
+            params:
+            - 10
+    noDataState: OK
+    execErrorState: Error
+    for: 5m
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: 'Temperatura < 10 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
+  - uid: ng-hum-alta
+    title: Humedad alta
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -3m)\n  |> filter(fn: (r) => r._measurement == \"humedad\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 80
+    noDataState: OK
+    execErrorState: Error
+    for: 5m
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: 'Humedad > 80 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %'
+  - uid: ng-hum-baja
+    title: Humedad baja
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -3m)\n  |> filter(fn: (r) => r._measurement == \"humedad\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: lt
+            params:
+            - 20
+    noDataState: OK
+    execErrorState: Error
+    for: 5m
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: 'Humedad < 20 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %'
+  - uid: ng-co2-elevado
+    title: CO₂ equivalente elevado
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -3m)\n  |> filter(fn: (r) => r._measurement == \"co2_equiv\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 1000
+    noDataState: OK
+    execErrorState: Error
+    for: 5m
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: 'CO₂ eq. > 1000 ppm en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} ppm'
+  - uid: ng-co2-critico
+    title: CO₂ equivalente crítico
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -3m)\n  |> filter(fn: (r) => r._measurement == \"co2_equiv\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 2000
+    noDataState: OK
+    execErrorState: Error
+    for: 2m
+    labels:
+      severidad: critical
+      proyecto: nextguard
+    annotations:
+      summary: 'CO₂ eq. > 2000 ppm en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} ppm'
+  - uid: ng-temp-salto
+    title: Salto brusco de temperatura
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"temperatura\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> spread()\n  |> map(fn: (r) => ({r with _time: now()}))"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 8
+    noDataState: OK
+    execErrorState: Error
+    for: 0s
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: 'Variación > 8 °C en 5 min en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
+  - uid: ng-sensor-caido
+    title: Sensor caído (sin datos)
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"))\n  |> group(columns: [\"\
+          cliente\", \"sensor\"])\n  |> last()\n  |> map(fn: (r) => ({r with _value: float(v: uint(v: now()) - uint(v: r._time)) / 1000000000.0}))\n  |> keep(columns: [\"_time\", \"_value\", \"cliente\"\
+          , \"sensor\"])"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 120
+    noDataState: OK
+    execErrorState: Error
+    for: 0s
+    labels:
+      severidad: critical
+      proyecto: nextguard
+    annotations:
+      summary: '{{ $labels.sensor }} ({{ $labels.cliente }}) no reporta hace {{ $values.B }} s'
+  - uid: ng-mq135-saturado
+    title: MQ135 saturado o sin señal
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"calidad_aire_raw\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion ==\
+          \ \"Simulador\"))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: outside_range
+            params:
+            - 5
+            - 4090
+    noDataState: OK
+    execErrorState: Error
+    for: 10m
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: 'ADC del MQ135 fuera de rango útil en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }}. Revisar divisor 10k/20k, AO (no DO) y GND común'
+  - uid: ng-mq135-estado
+    title: MQ135 con estado anómalo (firmware)
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"mq135_estado\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"\
+          Simulador\"))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: max, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0
+    noDataState: OK
+    execErrorState: Error
+    for: 5m
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: El firmware reporta mq135_estado={{ $values.B }} en {{ $labels.sensor }} ({{ $labels.cliente }}) (1 saturado, 2 sin señal)
+  - uid: ng-mq135-congelado
+    title: Lectura del MQ135 congelada
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -30m)\n  |> filter(fn: (r) => r._measurement == \"calidad_aire_raw\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion ==\
+          \ \"Simulador\"))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> stddev()\n  |> map(fn: (r) => ({r with _time: now()}))"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: lt
+            params:
+            - 0.5
+    noDataState: OK
+    execErrorState: Error
+    for: 0s
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: 'El ADC del MQ135 no varía en 30 min en {{ $labels.sensor }} ({{ $labels.cliente }}): posible sensor atascado o desconectado'
+  - uid: ng-wifi-debil
+    title: Señal WiFi débil
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -10m)\n  |> filter(fn: (r) => r._measurement == \"temperatura\" and r._field == \"rssi\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: lt
+            params:
+            - -80
+    noDataState: OK
+    execErrorState: Error
+    for: 10m
+    labels:
+      severidad: info
+      proyecto: nextguard
+    annotations:
+      summary: 'RSSI {{ $values.B }} dBm en {{ $labels.sensor }} ({{ $labels.cliente }}): acercar al router'
+  - uid: ng-reinicios
+    title: Reinicios frecuentes del ESP32
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"temperatura\" and r._field == \"seq\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"\
+          ))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> difference()\n  |> filter(fn: (r) => r._value > 5)\n  |> count()\n  |> map(fn: (r) => ({r with _time: now(), _value: float(v: r._value)}))"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 3
+    noDataState: OK
+    execErrorState: Error
+    for: 0s
+    labels:
+      severidad: info
+      proyecto: nextguard
+    annotations:
+      summary: '{{ $labels.sensor }} ({{ $labels.cliente }}) se reinició {{ $values.B }} veces en la última hora'
+  - uid: ng-dht-falla
+    title: Falla del DHT11 (sin temperatura)
+    condition: F
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"temperatura\" and r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"\
+          Simulador\"))\n  |> group(columns: [\"cliente\", \"sensor\"])\n  |> last()\n  |> map(fn: (r) => ({r with _value: float(v: uint(v: now()) - uint(v: r._time)) / 1000000000.0}))\n  |> keep(columns:\
+          \ [\"_time\", \"_value\", \"cliente\", \"sensor\"])"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: B
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._field == \"valor\" and not (exists r.ubicacion and r.ubicacion == \"Simulador\"))\n  |> group(columns: [\"\
+          cliente\", \"sensor\"])\n  |> last()\n  |> map(fn: (r) => ({r with _value: float(v: uint(v: now()) - uint(v: r._time)) / 1000000000.0}))\n  |> keep(columns: [\"_time\", \"_value\", \"cliente\"\
+          , \"sensor\"])"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: D
+      datasourceUid: __expr__
+      model:
+        refId: D
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: B
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: E
+      datasourceUid: __expr__
+      model:
+        refId: E
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: math
+        expression: $C > 300 && $D < 120
+    - refId: F
+      datasourceUid: __expr__
+      model:
+        refId: F
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: E
+        conditions:
+        - evaluator:
+            type: gt
+            params:
+            - 0
+    noDataState: OK
+    execErrorState: Error
+    for: 2m
+    labels:
+      severidad: warning
+      proyecto: nextguard
+    annotations:
+      summary: '{{ $labels.sensor }} ({{ $labels.cliente }}) reporta pero sin temperatura hace {{ $values.C }} s: revisar DHT11 y su pin de datos'
+  - uid: ng-sin-ingesta
+    title: Sin ingesta de datos (global)
+    condition: C
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: influxdb
+      model:
+        refId: A
+        datasource:
+          type: influxdb
+          uid: influxdb
+        query: "from(bucket: \"sensores\")\n  |> range(start: -10m)\n  |> filter(fn: (r) => r._field == \"valor\")\n  |> group()\n  |> count()\n  |> map(fn: (r) => ({r with _time: now(), _value: float(v:\
+          \ r._value)}))"
+        intervalMs: 1000
+        maxDataPoints: 43200
+    - refId: B
+      datasourceUid: __expr__
+      model:
+        refId: B
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: reduce
+        expression: A
+        reducer: last
+        settings:
+          mode: dropNN
+    - refId: C
+      datasourceUid: __expr__
+      model:
+        refId: C
+        datasource:
+          type: __expr__
+          uid: __expr__
+        type: threshold
+        expression: B
+        conditions:
+        - evaluator:
+            type: lt
+            params:
+            - 1
+    noDataState: Alerting
+    execErrorState: Error
+    for: 0s
+    labels:
+      severidad: critical
+      proyecto: nextguard
+    annotations:
+      summary: 'Ningún sensor ha enviado datos en 10 min: revisar API, EC2 e InfluxDB'

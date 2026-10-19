@@ -1,6 +1,6 @@
 # NextGuard · Monitoreo IoT
 
-Red de sensores ambientales: **ESP32 (DHT11 + MQ135) → API FastAPI → InfluxDB + PostgreSQL → Grafana**, desplegada en una sola instancia EC2 (AWS Learner Lab) con un contenedor Docker por servicio. Sigue la arquitectura de la clase «Del sensor a Grafana» (SIY6122) e incluye el plan de pruebas de integración completo (104 casos, 52 pruebas automatizadas).
+Red de sensores ambientales: **ESP32 (DHT11 + MQ135) → API FastAPI → InfluxDB + PostgreSQL → Grafana**, desplegada en una sola instancia EC2 (AWS Learner Lab) con un contenedor Docker por servicio. Sigue la arquitectura de la clase «Del sensor a Grafana» (SIY6122) e incluye el plan de pruebas de integración completo (108 casos, 55 pruebas automatizadas).
 
 ```
 Sensores ─► ESP32 ── WiFi ──► Internet ──► EC2 (docker compose)
@@ -72,13 +72,31 @@ arduino-cli compile --fqbn esp32:esp32:esp32 firmware/esp32_envio
 
 MQ135: la salida analógica va a **GPIO34 a través de un divisor de tensión** (p. ej. 10 kΩ/20 kΩ) y el módulo se alimenta a 5 V; nunca conectes AO directo a un GPIO.
 
+## Alertas (Grafana)
+Reglas aprovisionadas como código en `grafana/provisioning/alerting/` (`rules.yml` se genera con `python scripts/generar_alertas.py`; los umbrales se editan en esa tabla). Se evalúan cada minuto, una alerta por cliente+sensor, y se envían por correo (SMTP en `.env`: `GF_SMTP_*` y `ALERTA_DESTINATARIOS`).
+
+| Regla | Condición | Severidad |
+|---|---|---|
+| Temperatura alta / baja | > 35 °C / < 10 °C por 5 min | warning |
+| Humedad alta / baja | > 80 % / < 20 % por 5 min | warning |
+| CO₂ equivalente elevado / crítico | > 1000 ppm (5 min) / > 2000 ppm (2 min) | warning / critical |
+| Salto brusco de temperatura | variación > 8 °C en 5 min | warning |
+| Sensor caído | sin lecturas hace más de 2 min (sensores vistos en 24 h) | critical |
+| Falla del DHT11 | el sensor reporta pero sin temperatura hace > 5 min | warning |
+| MQ135 saturado / estado anómalo / congelado | ADC fuera de 5…4090 por 10 min; `mq135_estado` ≠ 0; sin variación en 30 min | warning |
+| Señal WiFi débil | RSSI < −80 dBm por 10 min | info |
+| Reinicios frecuentes | más de 3 saltos de `seq` en 1 h | info |
+| Sin ingesta global | ningún dato en 10 min (API/EC2/InfluxDB) | critical |
+
+Los sensores con ubicación `Simulador` quedan excluidos. Ver el estado en Grafana → Alerting → Alert rules.
+
 ## Pruebas
 
 ```bash
 pytest                # 49 pruebas con almacenamiento en memoria y SQLite (sin Docker ni AWS)
 ```
 
-Con el stack levantado se pueden correr las 52 pruebas contra PostgreSQL e InfluxDB reales (ver `docs/01_plan_maestro.md`, §6). Los casos se editan **solo** en `scripts/casos_de_prueba.py`; después:
+Con el stack levantado se pueden correr las 55 pruebas contra PostgreSQL e InfluxDB reales (ver `docs/01_plan_maestro.md`, §6). Los casos se editan **solo** en `scripts/casos_de_prueba.py`; después:
 
 ```bash
 python scripts/generar_documentos.py   # docs/02_casos_de_prueba.md, .csv y .xlsx (sobrescribe el .xlsx)
