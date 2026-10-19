@@ -25,7 +25,7 @@ La arquitectura sigue la propuesta de la clase «Del sensor a Grafana» (SIY6122
 **Fuera del alcance (primera entrega)**
 
 - Medición certificada de CO₂/gases con el MQ135: se reporta `co2_equiv` (ppm), una estimación con la curva típica y R0 autocalibrado en aire limpio, útil para tendencias; `calidad_aire_raw` queda como diagnóstico.
-- Alertas por correo/Telegram y portal de clientes (semana 15 del cronograma); el modelo `alertas` ya existe en PostgreSQL.
+- Portal de clientes y alertas por Telegram. Las alertas por correo ya están como reglas de Grafana (15 reglas en `grafana/provisioning/alerting/`: umbrales, MQ135, sensor caído y falta de ingesta); el modelo `alertas` de PostgreSQL queda para reglas por cliente.
 - Alta disponibilidad (varias instancias, balanceadores) y pruebas de penetración formales.
 - Despliegue automatizado con Ansible (semana 14).
 
@@ -203,7 +203,7 @@ Comandos frecuentes:
 pytest
 # Stack completo en la EC2 (o en tu PC con Docker)
 cp .env.example .env && docker compose up -d --build
-# Suite contra PostgreSQL e InfluxDB reales (52 pruebas): desde un contenedor en la red de compose
+# Suite contra PostgreSQL e InfluxDB reales (55 pruebas): desde un contenedor en la red de compose
 #   TEST_DATABASE_URL=postgresql+psycopg://iot:<clave>@postgres:5432/iot_test  TEST_INFLUX_URL=http://influxdb:8086  TEST_INFLUX_TOKEN=<token de la API>
 # Tráfico simulado con verificación
 python scripts/simulador_sensor.py --url http://<IP>:8000 --api-key <clave> --devices 3 --count 50 --dup-rate 0.1 --with-mq --verify
@@ -291,7 +291,7 @@ Para no confundir lo **diseñado** con lo **comprobado**:
 | Elemento | Estado |
 |---|---|
 | Suite pytest con almacenamiento en memoria y SQLite (49 pruebas, 3 de integración omitidas) | ✅ Ejecutada; todas pasan |
-| Suite pytest contra PostgreSQL 16 e InfluxDB 2.7 reales (52 pruebas) | ✅ Ejecutada desde un contenedor en la red de compose; todas pasan |
+| Suite pytest contra PostgreSQL 16 e InfluxDB 2.7 reales (55 pruebas) | ✅ Ejecutada desde un contenedor en la red de compose; todas pasan |
 | Stack `docker compose` (api + InfluxDB + PostgreSQL + Grafana) en local | ✅ Levantado con Docker; `/health` ok con ambas bases; tokens creados por `db/influx-init.sh` |
 | Token de Grafana de solo lectura | ✅ Escribir con él devuelve 403; con el token de la API, 204 |
 | Dashboard de Grafana en Flux | ✅ Los 9 paneles y las 2 variables responden 200 vía `/api/ds/query` |
@@ -302,7 +302,7 @@ Para no confundir lo **diseñado** con lo **comprobado**:
 | Despliegue de esta versión en la EC2 (t3.medium, Elastic IP) | ✅ 2026-10-17: stack de 4 contenedores healthy; `smoke_env.sh` 9/9 desde fuera de AWS; `--externo`: 8086 y 5432 cerrados; simulador `--verify` (60 lecturas, 0 faltantes, 0 duplicados, p95 261 ms); token de Grafana → 403 al escribir; Postman 19/19 contra la EC2 |
 | Reinicio de la EC2 con la nueva versión (IT-ENV-05, IT-ENV-08, IT-NFR-07) | ✅ Los 4 contenedores vuelven solos (≈10 s tras el arranque); 60 lecturas antes y 60 después; datasource y dashboard de Grafana intactos |
 | Pruebas con hardware (portal, DHT11, MQ135, E2E hasta Grafana) y sesiones S1–S7 | ⏳ Pendiente |
-| Matriz `.xlsx` | ✅ Regenerada desde `scripts/casos_de_prueba.py`: 104 casos |
+| Matriz `.xlsx` | ✅ Regenerada desde `scripts/casos_de_prueba.py`: 108 casos |
 
 ---
 

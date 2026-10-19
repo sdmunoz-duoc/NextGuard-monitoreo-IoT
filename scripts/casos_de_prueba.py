@@ -300,6 +300,21 @@ _CASOS = [
      ["Dejar correr 10 min", "Abrir el dashboard, elegir cliente y sensor", "Comparar el último valor de cada panel con el monitor serie"],
      "—", "Los paneles de temperatura, humedad y calidad del aire muestran los valores del monitor serie (±0,1 °C / ±0,5 %HR) sin huecos.", ""),
 
+    ("IT-E2E-09", "Reglas de alerta de Grafana aprovisionadas y válidas", "RF-08", "Alta", "A",
+     "—", ["Cargar rules.yml, contactpoints.yml y policies.yml", "Comprobar uids únicos, condición existente, severidad y consulta Flux por regla"],
+     "—", "15 reglas válidas que cubren temperatura, humedad, CO₂, MQ135, WiFi, caída de sensor y falta de ingesta.", _TEST + "test_alertas.py::test_it_e2e_09_reglas_de_alerta_aprovisionadas_son_validas"),
+    ("IT-E2E-10", "Alerta de sensor caído", "RF-08", "Alta", "S",
+     "Stack con las reglas cargadas (GET /api/prometheus/grafana/api/v1/rules sin errores).",
+     ["Enviar lecturas de un sensor con ubicación distinta de «Simulador»", "Dejar de enviar 3 min", "Consultar el estado de la regla «Sensor caído (sin datos)»"],
+     "—", "La regla pasa a Firing para ese sensor y llega el correo de la alerta.", ""),
+    ("IT-E2E-11", "Alerta por umbral de temperatura, humedad y CO₂", "RF-08", "Alta", "S",
+     "Reglas cargadas; SMTP configurado.",
+     ["Enviar temperatura=40 °C, humedad=90 % y co2_equiv=2500 durante 6 min", "Consultar las reglas"],
+     "40 °C, 90 %, 2500 ppm", "Temperatura alta, Humedad alta y CO₂ crítico/elevado pasan a Firing con etiquetas cliente y sensor.", ""),
+    ("IT-E2E-12", "Alerta de MQ135 saturado", "RF-11", "Alta", "S",
+     "Reglas cargadas.", ["Enviar calidad_aire_raw=4095 constante durante 10 min"], "4095",
+     "«MQ135 saturado o sin señal» y «Lectura del MQ135 congelada» pasan a Firing.", ""),
+
     # ---------------- N5 No funcionales ----------------
     ("IT-NFR-01", "Latencia local: 200 envíos, p95 < 0,5 s", "RNF-01", "Media", "A",
      "Almacenamiento en memoria y SQLite locales.", ["Ejecutar la prueba de carga ligera"], "200 envíos", "p95 < 0,5 s.", _TEST + "test_seguridad_y_carga.py::test_it_nfr_01_200_envios_secuenciales_p95_bajo_umbral"),

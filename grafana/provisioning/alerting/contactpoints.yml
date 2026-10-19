@@ -1,0 +1,10 @@
+apiVersion: 1
+contactPoints:
+  - orgId: 1
+    name: correo
+    receivers:
+      - uid: ng-correo
+        type: email
+        settings:
+          addresses: ${ALERTA_DESTINATARIOS}      # separados por ; (definir en .env)
+          singleEmail: true
