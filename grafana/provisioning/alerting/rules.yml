@@ -475,7 +475,7 @@ groups:
       severidad: warning
       proyecto: nextguard
     annotations:
-      summary: 'ADC del MQ135 fuera de rango útil en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }}. Revisar divisor 10k/20k, AO (no DO) y GND común'
+      summary: 'ADC del MQ135 fuera de rango útil en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }}. Revisar divisor 47k/47k, AO (no DO) y GND común'
   - uid: ng-mq135-estado
     title: MQ135 con estado anómalo (firmware)
     condition: C

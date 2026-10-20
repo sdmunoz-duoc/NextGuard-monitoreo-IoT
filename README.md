@@ -70,7 +70,7 @@ arduino-cli lib install WiFiManager "DHT sensor library" "Adafruit Unified Senso
 arduino-cli compile --fqbn esp32:esp32:esp32 firmware/esp32_envio
 ```
 
-MQ135: la salida analógica va a **GPIO34 a través de un divisor de tensión** (p. ej. 10 kΩ/20 kΩ) y el módulo se alimenta a 5 V; nunca conectes AO directo a un GPIO.
+MQ135: la salida analógica va a **GPIO34 a través de un divisor de tensión** (AO → 47 kΩ → GPIO34 → 47 kΩ → GND, factor 2; 5 V quedan en 2,5 V) y el módulo se alimenta a 5 V; usa la salida **AO**, no DO, y nunca conectes AO directo a un GPIO. Con otras resistencias, ajusta `MQ_DIVISOR` en el firmware.
 
 ## Alertas (Grafana)
 Reglas aprovisionadas como código en `grafana/provisioning/alerting/` (`rules.yml` se genera con `python scripts/generar_alertas.py`; los umbrales se editan en esa tabla). Se evalúan cada minuto, una alerta por cliente+sensor, y se envían por correo (SMTP en `.env`: `GF_SMTP_*` y `ALERTA_DESTINATARIOS`).

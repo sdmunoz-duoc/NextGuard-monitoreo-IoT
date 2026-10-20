@@ -20,7 +20,7 @@
 #define DHT_TYPE           DHT11        // DHT11 o DHT22
 
 // USE_MQ135: 0 = sin sensor, 1 = MQ135 real, 2 = valores simulados
-//   AO -> divisor resistivo (p. ej. 10 kΩ arriba / 20 kΩ abajo) -> GPIO34 (ADC1: compatible con WiFi).
+//   AO -> divisor resistivo (47 kΩ arriba / 47 kΩ abajo, factor 2; ajustar MQ_DIVISOR si cambia) -> GPIO34 (ADC1: compatible con WiFi).
 //   El módulo se alimenta a 5 V (VIN); NUNCA conectar AO directo a un GPIO (máximo 3,3 V).
 #define USE_MQ135          0
 #define MQ135_PIN          34

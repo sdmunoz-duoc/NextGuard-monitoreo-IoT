@@ -194,13 +194,13 @@
 ### IT-SEN-07 — MQ135: salida analógica nunca supera 3,3 V en el GPIO
 
 - **Requisito:** RF-11 · **Prioridad:** Alta · **Tipo:** Manual
-- **Precondiciones:** Divisor resistivo (p. ej. 10 kΩ / 20 kΩ) entre AO y GPIO34; módulo alimentado a 5 V; GND común.
+- **Precondiciones:** Divisor 47 kΩ / 47 kΩ (AO → 47 kΩ → GPIO34 → 47 kΩ → GND; opcional 100 nF de GPIO34 a GND) entre la salida AO (no DO) y GPIO34; módulo alimentado a 5 V; GND común.
 - **Pasos:**
   1. ANTES de conectar al GPIO, medir con multímetro la tensión tras el divisor en aire limpio y con una fuente de alcohol cerca
   2. Conectar AO al GPIO34
   3. Cargar firmware con USE_MQ135=1
 - **Datos:** —
-- **Resultado esperado:** La tensión tras el divisor es siempre ≤ 3,3 V; `calidad_aire_mv` entre 0 y 3300.
+- **Resultado esperado:** La tensión tras el divisor es siempre < 3 V (normalmente 0,3–1,5 V); `calidad_aire_mv` entre 0 y 3300.
 
 ### IT-SEN-08 — MQ135: precalentamiento y lectura estable
 

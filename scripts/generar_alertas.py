@@ -85,7 +85,7 @@ def reglas() -> list[dict]:
     umbral("ng-mq135-saturado", "MQ135 saturado o sin señal",
            serie("calidad_aire_raw", "valor", "10m"), "outside_range", [5, 4090], "10m", "warning",
            "ADC del MQ135 fuera de rango útil en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }}. "
-           "Revisar divisor 10k/20k, AO (no DO) y GND común")
+           "Revisar divisor 47k/47k, AO (no DO) y GND común")
     umbral("ng-mq135-estado", "MQ135 con estado anómalo (firmware)",
            serie("mq135_estado", "valor", "10m", "max"), "gt", 0, "5m", "warning",
            "El firmware reporta mq135_estado={{ $values.B }} en {{ $labels.sensor }} ({{ $labels.cliente }}) "
