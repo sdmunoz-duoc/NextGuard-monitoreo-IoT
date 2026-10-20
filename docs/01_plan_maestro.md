@@ -172,7 +172,7 @@ Python 3.11+ con `requirements-dev.txt`; almacenamiento en memoria y SQLite. Con
 
 ### 5.4 Hardware
 
-ESP32 (DevKit o similar) con cable USB de datos de calidad, sensor DHT11 (módulo HW-036, 3 pines S/+/−; con DHT22 solo cambia `DHT_TYPE`), sensor MQ135 con dos resistencias para el divisor de tensión (p. ej. 10 kΩ y 20 kΩ: la salida analógica puede superar los 3,3 V que tolera el GPIO34) y alimentación de 5 V para su calentador, protoboard y cables, router 2.4 GHz con WPA2, termómetro/higrómetro de referencia, segundo dispositivo para probar el hotspot (opcional).
+ESP32 (DevKit o similar) con cable USB de datos de calidad, sensor DHT11 (módulo HW-036, 3 pines S/+/−; con DHT22 solo cambia `DHT_TYPE`), sensor MQ135 con dos resistencias para el divisor de tensión (dos de 47 kΩ en divisor 1:1, con 100 nF opcional entre GPIO34 y GND: la salida AO puede llegar a 5 V y el GPIO34 tolera 3,3 V; se usa AO, no DO) y alimentación de 5 V para su calentador, protoboard y cables, router 2.4 GHz con WPA2, termómetro/higrómetro de referencia, segundo dispositivo para probar el hotspot (opcional).
 
 ### 5.5 Conexión WiFi (lección de la etapa de diagnóstico)
 
@@ -271,7 +271,7 @@ Cada defecto se registra con: ID de caso, pasos, resultado esperado vs real, evi
 | R-15 | Doble escritura no atómica: la marca de seq (PostgreSQL) y el punto (InfluxDB) pueden quedar desfasados si la API cae entre ambas | Baja | Medio | Si InfluxDB falla se borra la marca y se responde 503 (IT-DB-12); queda una ventana mínima si el proceso muere justo entre ambos pasos; el simulador `--verify` y el conteo por seq la detectan |
 | R-16 | InfluxDB 2.x tarda unas décimas de segundo en hacer visible una escritura | Alta | Bajo | La idempotencia no depende de InfluxDB (usa PostgreSQL); las verificaciones consultan con reintentos hasta 10 s |
 | R-17 | El token de Grafana o de la API se filtra | Baja | Alto | Tokens con privilegios mínimos, en volúmenes separados y fuera del repositorio; el de Grafana no puede escribir (IT-DB-18); rotar con `docker compose down -v` solo si se acepta perder datos |
-| R-18 | MQ135 con lecturas relativas, sin calibrar, y salida analógica superior a 3,3 V | Media | Alto | Reportar `co2_equiv` (ppm estimado, R0 autocalibrado) y `calidad_aire_raw`; divisor de tensión verificado con multímetro antes de conectar (IT-SEN-07); precalentamiento (IT-SEN-08) |
+| R-18 | MQ135 con lecturas relativas, sin calibrar, y salida analógica superior a 3,3 V | Media | Alto | Reportar `co2_equiv` (ppm estimado, R0 autocalibrado) y `calidad_aire_raw`; divisor 47k/47k verificado con multímetro antes de conectar (IT-SEN-07; la carga de 94 kΩ sobre AO la compensa la autocalibración de R0); precalentamiento (IT-SEN-08) |
 | R-19 | Los materiales de la clase muestran ClickHouse en el demo y InfluxDB + PostgreSQL en las diapositivas | Media | Medio | Se siguió la diapositiva 4 (InfluxDB + PostgreSQL); confirmar con el docente antes de la Evaluación 2 |
 | R-05 | Lecturas `NaN` o poco precisas del DHT (especialmente DHT11) | Media | Medio | El firmware descarta `NaN`; comparar con instrumento de referencia; registrar la tolerancia del sensor |
 | R-06 | Caídas de tensión (cable/puerto USB) provocan fallos de WiFi | Media | Medio | Cable de datos corto y de calidad; puerto directo; alimentación externa; `USE_LOW_TX_POWER` en el diagnóstico |

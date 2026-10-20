@@ -229,9 +229,9 @@ void leerMQ135(uint16_t &mv, uint16_t &raw) {
 }
 
 // Conversión a ppm de CO2 equivalente (estimación con la curva típica del MQ135).
-// Supone módulo a 5 V, RL = 10 kΩ y divisor 10k/20k entre AO y el GPIO; R0 se calibra en la
+// Supone módulo a 5 V, RL = 10 kΩ y divisor 47k/47k entre AO y el GPIO (Vao = Vgpio x 2); R0 se calibra en la
 // primera lectura tras el precalentamiento suponiendo aire limpio (~400 ppm).
-const float MQ_VCC_MV = 5000.0, MQ_RL_KOHM = 10.0, MQ_DIVISOR = 1.5;
+const float MQ_VCC_MV = 5000.0, MQ_RL_KOHM = 10.0, MQ_DIVISOR = 2.0;
 const float MQ_CURVA_A = 116.6020682, MQ_CURVA_B = -2.769034857, MQ_PPM_AIRE = 400.0;
 float mqR0 = 0;
 
