@@ -51,7 +51,8 @@ def test_it_db_15_influx_guarda_y_devuelve_la_lectura(client):
     assert client.post(URL, json=payload(seq=1, sensor=sensor)).status_code == 201
     lecturas = leer(client, sensor)
     assert len(lecturas) == 1
-    assert {m["tipo"]: m["valor"] for m in lecturas[0]["mediciones"]} == {"temperatura": 23.4, "humedad": 51.0}
+    v = {m["tipo"]: m["valor"] for m in lecturas[0]["mediciones"]}   # punto_rocio lo deriva la API
+    assert (v["temperatura"], v["humedad"]) == (23.4, 51.0) and "punto_rocio" in v
     assert lecturas[0]["seq"] == 1 and lecturas[0]["rssi"] == -61
 
 

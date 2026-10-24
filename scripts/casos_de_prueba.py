@@ -225,6 +225,12 @@ _CASOS = [
      "—", ["GET /clientes/nadie y /clientes/nadie/sensores"], "—", "404.", _TEST + "test_api_contrato.py::test_it_api_31_cliente_inexistente_404"),
     ("IT-API-32", "Lecturas de un sensor por cliente", "RF-06", "Media", "A",
      "3 lecturas guardadas.", ["GET /clientes/<id>/sensores/<sensor>/lecturas?limite=2"], "—", "200 con 2 lecturas.", _TEST + "test_api_contrato.py::test_it_api_32_lecturas_de_un_sensor_por_cliente"),
+    ("IT-API-33", "Punto de rocío derivado (Magnus-Tetens)", "RF-04", "Media", "A",
+     "—", ["POST con temperatura 25 °C y humedad 60 %", "GET de la lectura"], "a=17,62; b=243,12 °C",
+     "La lectura incluye punto_rocio ≈ 16,7 °C (±0,1).", _TEST + "test_api_contrato.py::test_it_api_33_punto_de_rocio_derivado_magnus_tetens"),
+    ("IT-API-34", "Punto de rocío no se deriva sin datos ni se duplica", "RF-04", "Baja", "A",
+     "—", ["POST solo con temperatura", "POST con humedad 0 %", "POST que ya trae punto_rocio"], "—",
+     "No se agrega punto_rocio en los dos primeros; en el tercero queda el valor del sensor.", _TEST + "test_api_contrato.py::test_it_api_34_punto_de_rocio_no_se_deriva_sin_datos_o_si_ya_viene"),
 
     # ---------------- N3 BD ----------------
     ("IT-DB-01", "Guarda la lectura con todas sus mediciones", "RF-04", "Alta", "A",

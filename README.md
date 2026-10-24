@@ -72,6 +72,9 @@ arduino-cli compile --fqbn esp32:esp32:esp32 firmware/esp32_envio
 
 MQ135: la salida analógica va a **GPIO34 a través de un divisor de tensión** (AO → 47 kΩ → GPIO34 → 47 kΩ → GND, factor 2; 5 V quedan en 2,5 V) y el módulo se alimenta a 5 V; usa la salida **AO**, no DO, y nunca conectes AO directo a un GPIO. Con otras resistencias, ajusta `MQ_DIVISOR` en el firmware.
 
+## Punto de rocío
+La API calcula `punto_rocio` (°C) con la fórmula de Magnus-Tetens cuando un envío trae `temperatura` y `humedad`: γ = ln(HR/100) + a·T/(b+T), Td = b·γ/(a−γ), con a = 17,62 y b = 243,12 °C (válida de −45 a 60 °C). Se guarda como una medición más (no hay que reflashear el ESP32) y se grafica en el panel «Punto de rocío (°C)» de Grafana. Si el sensor ya envía `punto_rocio`, se respeta. Implementación: `api/psicrometria.py`.
+
 ## Alertas (Grafana)
 Reglas aprovisionadas como código en `grafana/provisioning/alerting/` (`rules.yml` se genera con `python scripts/generar_alertas.py`; los umbrales se editan en esa tabla). Se evalúan cada minuto, una alerta por cliente+sensor, y se envían por correo (SMTP en `.env`: `GF_SMTP_*` y `ALERTA_DESTINATARIOS`).
 

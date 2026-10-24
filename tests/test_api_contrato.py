@@ -89,7 +89,7 @@ def test_it_api_14_get_filtra_por_sensor_y_limit(client):
 def test_it_api_15_get_devuelve_mediciones_completas(client):
     client.post(URL, json=payload(seq=1))
     lectura = client.get(URL).json()[0]
-    assert {m["tipo"] for m in lectura["mediciones"]} == {"temperatura", "humedad"}
+    assert {m["tipo"] for m in lectura["mediciones"]} == {"temperatura", "humedad", "punto_rocio"}
     assert lectura["rssi"] == -61 and lectura["cliente"] == CLIENTE
 
 
@@ -171,3 +171,36 @@ def test_it_api_32_lecturas_de_un_sensor_por_cliente(client):
         client.post(URL, json=payload(seq=i))
     r = client.get(f"/clientes/{CLIENTE}/sensores/sensor-01/lecturas", params={"limite": 2})
     assert r.status_code == 200 and len(r.json()) == 2
+
+
+def _med(client, **kw):
+    return {m["tipo"]: m["valor"] for m in client.get(URL, params={"sensor": kw.get("sensor", "sensor-01")}).json()[0]["mediciones"]}
+
+
+def test_it_api_33_punto_de_rocio_derivado_magnus_tetens(client):
+    from psicrometria import punto_rocio
+
+    assert abs(punto_rocio(25, 60) - 16.7) < 0.1
+    assert abs(punto_rocio(20, 50) - 9.3) < 0.1
+    assert abs(punto_rocio(30, 100) - 30) < 0.01
+    assert punto_rocio(20, 0) is None
+    p = payload(seq=1)
+    p["mediciones"] = [{"tipo": "temperatura", "valor": 25, "unidad": "C"}, {"tipo": "humedad", "valor": 60, "unidad": "%"}]
+    assert client.post(URL, json=p).status_code == 201
+    assert abs(_med(client)["punto_rocio"] - 16.7) < 0.1
+
+
+def test_it_api_34_punto_de_rocio_no_se_deriva_sin_datos_o_si_ya_viene(client):
+    p = payload(seq=1, sensor="a")
+    p["mediciones"] = [{"tipo": "temperatura", "valor": 25, "unidad": "C"}]
+    client.post(URL, json=p)
+    assert "punto_rocio" not in _med(client, sensor="a")
+    p = payload(seq=1, sensor="b")
+    p["mediciones"] = [{"tipo": "temperatura", "valor": 25, "unidad": "C"}, {"tipo": "humedad", "valor": 0, "unidad": "%"}]
+    client.post(URL, json=p)
+    assert "punto_rocio" not in _med(client, sensor="b")
+    p = payload(seq=1, sensor="c")
+    p["mediciones"].append({"tipo": "punto_rocio", "valor": 5.0, "unidad": "C"})
+    client.post(URL, json=p)
+    meds = client.get(URL, params={"sensor": "c"}).json()[0]["mediciones"]
+    assert [m["valor"] for m in meds if m["tipo"] == "punto_rocio"] == [5.0]

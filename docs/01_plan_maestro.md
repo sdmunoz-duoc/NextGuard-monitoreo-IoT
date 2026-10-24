@@ -56,11 +56,11 @@ Las bases no publican puertos: solo se accede a ellas desde la red interna de Do
 | `GET /clientes/{id}/sensores` · `GET /clientes/{id}/sensores/{sensor}/lecturas` | Sensores del cliente (con última lectura) y sus lecturas | `200` · `404` |
 | `GET /health` | Estado de la API, PostgreSQL e InfluxDB | `200` · `503` con la base caída |
 
-Autenticación: cabecera `X-API-Key` en todos los endpoints salvo `/health`. Identificador de idempotencia: par (`sensor`, `seq`) por cliente. Validación de rango físico: temperatura −40…80 °C, humedad 0…100 %, `co2_equiv` 300…10000 ppm, `calidad_aire_mv` 0…3300 mV (diagnóstico), `calidad_aire_raw` 0…4095; `timestamp` no puede superar 5 min en el futuro. Toda la API trabaja en UTC.
+Autenticación: cabecera `X-API-Key` en todos los endpoints salvo `/health`. Identificador de idempotencia: par (`sensor`, `seq`) por cliente. Validación de rango físico: temperatura −40…80 °C, humedad 0…100 %, `co2_equiv` 300…10000 ppm, `calidad_aire_mv` 0…3300 mV (diagnóstico), `calidad_aire_raw` 0…4095, `punto_rocio` −80…80 °C; `timestamp` no puede superar 5 min en el futuro. Toda la API trabaja en UTC.
 
 ### 2.3 Modelo de datos
 
-**InfluxDB 2.7** (org `duoc`, bucket `sensores`): measurement = tipo de medición (`temperatura`, `humedad`, `co2_equiv`…); tags `sensor`, `cliente`, `ubicacion`, `unidad`; fields `valor`, `seq`, `rssi`, `ts_dispositivo` y `fw`; hora del punto = hora del servidor. Agregar una magnitud nueva **no requiere migrar nada** (casos `IT-DB-04`, `IT-E2E-07`). Tokens: la API recibe uno de lectura y escritura y Grafana uno de **solo lectura**, creados al inicializar el volumen (`db/influx-init.sh`).
+**InfluxDB 2.7** (org `duoc`, bucket `sensores`): measurement = tipo de medición (`temperatura`, `humedad`, `co2_equiv`, `punto_rocio`…; esta última la deriva la API con Magnus-Tetens a partir de temperatura y humedad); tags `sensor`, `cliente`, `ubicacion`, `unidad`; fields `valor`, `seq`, `rssi`, `ts_dispositivo` y `fw`; hora del punto = hora del servidor. Agregar una magnitud nueva **no requiere migrar nada** (casos `IT-DB-04`, `IT-E2E-07`). Tokens: la API recibe uno de lectura y escritura y Grafana uno de **solo lectura**, creados al inicializar el volumen (`db/influx-init.sh`).
 
 **PostgreSQL 16** (`db/init.sql`):
 
