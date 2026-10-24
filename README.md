@@ -80,8 +80,8 @@ Reglas aprovisionadas como código en `grafana/provisioning/alerting/` (`rules.y
 
 | Regla | Condición | Severidad |
 |---|---|---|
-| Temperatura alta / baja | > 35 °C / < 10 °C por 5 min | warning |
-| Humedad alta / baja | > 80 % / < 20 % por 5 min | warning |
+| Temperatura alta / baja | > 30 °C / < 15 °C por 3 min | warning |
+| Humedad alta / baja | > 70 % / < 30 % por 3 min | warning |
 | CO₂ equivalente elevado / crítico | > 1000 ppm (5 min) / > 2000 ppm (2 min) | warning / critical |
 | Salto brusco de temperatura | variación > 8 °C en 5 min | warning |
 | Sensor caído | sin lecturas hace más de 2 min (sensores vistos en 24 h) | critical |

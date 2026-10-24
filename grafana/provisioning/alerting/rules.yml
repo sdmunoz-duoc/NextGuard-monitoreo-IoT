@@ -49,15 +49,15 @@ groups:
         - evaluator:
             type: gt
             params:
-            - 35
+            - 30
     noDataState: OK
     execErrorState: Error
-    for: 5m
+    for: 3m
     labels:
       severidad: warning
       proyecto: sapit-alerts
     annotations:
-      summary: 'Temperatura > 35 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
+      summary: 'Temperatura > 30 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
   - uid: ng-temp-baja
     title: Temperatura baja
     condition: C
@@ -101,15 +101,15 @@ groups:
         - evaluator:
             type: lt
             params:
-            - 10
+            - 15
     noDataState: OK
     execErrorState: Error
-    for: 5m
+    for: 3m
     labels:
       severidad: warning
       proyecto: sapit-alerts
     annotations:
-      summary: 'Temperatura < 10 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
+      summary: 'Temperatura < 15 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
   - uid: ng-hum-alta
     title: Humedad alta
     condition: C
@@ -153,15 +153,15 @@ groups:
         - evaluator:
             type: gt
             params:
-            - 80
+            - 70
     noDataState: OK
     execErrorState: Error
-    for: 5m
+    for: 3m
     labels:
       severidad: warning
       proyecto: sapit-alerts
     annotations:
-      summary: 'Humedad > 80 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %'
+      summary: 'Humedad > 70 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %'
   - uid: ng-hum-baja
     title: Humedad baja
     condition: C
@@ -205,15 +205,15 @@ groups:
         - evaluator:
             type: lt
             params:
-            - 20
+            - 30
     noDataState: OK
     execErrorState: Error
-    for: 5m
+    for: 3m
     labels:
       severidad: warning
       proyecto: sapit-alerts
     annotations:
-      summary: 'Humedad < 20 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %'
+      summary: 'Humedad < 30 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %'
   - uid: ng-co2-elevado
     title: CO₂ equivalente elevado
     condition: C
