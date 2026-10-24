@@ -111,7 +111,7 @@
 - **Pasos:**
   1. Abrir http://<IP>:3000 e iniciar sesión con el usuario de .env
   2. Connections → Data sources → InfluxDB → Save & test
-  3. Abrir el dashboard «NextGuard · Monitoreo IoT» y elegir cliente y sensor
+  3. Abrir el dashboard «SapIT Alerts · Monitoreo IoT» y elegir cliente y sensor
 - **Datos:** grafana/
 - **Resultado esperado:** El datasource responde «datasource is working»; los paneles de temperatura, humedad y calidad del aire muestran las lecturas del simulador.
 
@@ -779,7 +779,7 @@
 - **Requisito:** RF-04 · **Prioridad:** Alta · **Tipo:** Semi-automático
 - **Precondiciones:** Stack en ejecución; BD de pruebas `iot_test` creada; token de la API.
 - **Pasos:**
-  1. Ejecutar pytest en un contenedor unido a la red nextguard_backend con TEST_DATABASE_URL=postgresql+psycopg://iot:<clave>@postgres:5432/iot_test, TEST_INFLUX_URL=http://influxdb:8086 y TEST_INFLUX_TOKEN=<token de la API>
+  1. Ejecutar pytest en un contenedor unido a la red sapit-alerts_backend con TEST_DATABASE_URL=postgresql+psycopg://iot:<clave>@postgres:5432/iot_test, TEST_INFLUX_URL=http://influxdb:8086 y TEST_INFLUX_TOKEN=<token de la API>
 - **Datos:** BD `iot_test`
 - **Resultado esperado:** 52 pruebas aprobadas (49 con almacenamiento en memoria y 3 de integración con InfluxDB real).
 - **Automatización:** `tests`

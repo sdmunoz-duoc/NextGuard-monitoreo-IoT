@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Genera grafana/provisioning/alerting/rules.yml (reglas de alerta de NextGuard).
+"""Genera grafana/provisioning/alerting/rules.yml (reglas de alerta de SapIT Alerts).
 
 Cada regla es una consulta Flux contra el bucket `sensores` (una serie por cliente+sensor),
 una reducción al último valor y un umbral. Los umbrales se pueden ajustar editando la tabla
@@ -151,7 +151,7 @@ def construir(r: dict) -> dict:
     return {
         "uid": r["uid"], "title": r["titulo"], "condition": condicion, "data": data,
         "noDataState": r["nodata"], "execErrorState": "Error", "for": r["para"],
-        "labels": {"severidad": r["sev"], "proyecto": "nextguard"},
+        "labels": {"severidad": r["sev"], "proyecto": "sapit-alerts"},
         "annotations": {"summary": r["resumen"]},
     }
 
@@ -163,7 +163,7 @@ class _SinAlias(yaml.SafeDumper):
 
 def main() -> None:
     doc = {"apiVersion": 1, "groups": [{
-        "orgId": 1, "name": "nextguard", "folder": "NextGuard", "interval": "1m",
+        "orgId": 1, "name": "sapit-alerts", "folder": "SapIT Alerts", "interval": "1m",
         "rules": [construir(r) for r in reglas()],
     }]}
     texto = yaml.dump(doc, Dumper=_SinAlias, allow_unicode=True, sort_keys=False, width=200)

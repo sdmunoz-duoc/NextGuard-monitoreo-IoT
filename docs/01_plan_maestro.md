@@ -1,6 +1,6 @@
 # Plan maestro de pruebas de integración
 
-**Proyecto:** NextGuard · Monitoreo IoT: ESP32 (DHT11 + MQ135) → API Python → InfluxDB + PostgreSQL → Grafana  
+**Proyecto:** SapIT Alerts · Monitoreo IoT: ESP32 (DHT11 + MQ135) → API Python → InfluxDB + PostgreSQL → Grafana  
 **Entorno de ejecución:** AWS Learner Lab, una EC2 con un contenedor Docker por servicio (api, influxdb, postgres, grafana)  
 **Versión:** 2.0 · **Fecha:** 2026-10-17 · **Idioma:** español
 
@@ -149,10 +149,10 @@ La matriz completa requisito ↔ caso está en `02_casos_de_prueba.md` y en la h
 
 | Recurso | Configuración propuesta | Observaciones |
 |---|---|---|
-| EC2 | Amazon Linux 2023, **`t3.medium`** (4 GB) como base; **`t3.large`** (8 GB) si se añaden servicios o para la carga IT-NFR-04. SG `nextguard-sg` (22 y 3000 solo «Mi IP», 8000 abierto al ESP32) | Ejecuta `docker compose` con los contenedores `api`, `influxdb`, `postgres` y `grafana`; **Elastic IP** si está permitida. Límites de memoria en compose: influxdb 768 MB, postgres 512 MB, api 512 MB, grafana 512 MB |
+| EC2 | Amazon Linux 2023, **`t3.medium`** (4 GB) como base; **`t3.large`** (8 GB) si se añaden servicios o para la carga IT-NFR-04. SG `sapit-alerts-sg` (22 y 3000 solo «Mi IP», 8000 abierto al ESP32) | Ejecuta `docker compose` con los contenedores `api`, `influxdb`, `postgres` y `grafana`; **Elastic IP** si está permitida. Límites de memoria en compose: influxdb 768 MB, postgres 512 MB, api 512 MB, grafana 512 MB |
 | InfluxDB | Contenedor `influxdb:2.7`, volumen `influx-data`, sin puertos publicados | Org `duoc`, bucket `sensores`; token de la API (lectura+escritura) y token de Grafana (solo lectura) en volúmenes separados |
 | PostgreSQL | Contenedor `postgres:16-alpine`, volumen `pg-data`, sin puertos publicados | Base `iot`, usuario `iot`; tablas de `db/init.sql` |
-| Security Group | `nextguard-sg` | Sin reglas para los puertos 8086 (InfluxDB) ni 5432 (PostgreSQL) |
+| Security Group | `sapit-alerts-sg` | Sin reglas para los puertos 8086 (InfluxDB) ni 5432 (PostgreSQL) |
 | IAM | `LabRole` / `LabInstanceProfile` | No se pueden crear roles propios |
 
 La guía paso a paso está en `docs/deploy_ec2.md`.
@@ -186,7 +186,7 @@ Durante la puesta en marcha el ESP32 no conectaba y la causa era una contraseña
 |---|---|---|
 | API FastAPI | `api/` (con `Dockerfile`) | Sistema bajo prueba |
 | Stack Docker | `docker-compose.yml` | Servicios `api`, `influxdb`, `postgres` y `grafana` en una EC2 |
-| Dashboards | `grafana/` | Datasource InfluxDB (Flux, token de solo lectura) y dashboard «NextGuard · Monitoreo IoT» con variables cliente y sensor |
+| Dashboards | `grafana/` | Datasource InfluxDB (Flux, token de solo lectura) y dashboard «SapIT Alerts · Monitoreo IoT» con variables cliente y sensor |
 | Esquemas | `db/init.sql`, `db/influx-init.sh` | DDL de PostgreSQL y creación de los tokens de InfluxDB |
 | Suite pytest | `tests/` | Contrato, validaciones, idempotencia, seguridad, carga ligera e integración con InfluxDB (`pytest`) |
 | Simulador | `scripts/simulador_sensor.py` | Genera tráfico; `--verify` compara lo enviado con lo guardado |
@@ -309,7 +309,7 @@ Para no confundir lo **diseñado** con lo **comprobado**:
 ## 11. Entregables del paquete
 
 ```
-NextGuard-monitoreo-IoT/
+SapIT-Alerts/
 ├── README.md                     índice y cómo empezar
 ├── api/                          API FastAPI + Dockerfile
 ├── docker-compose.yml            api, influxdb, postgres y grafana

@@ -1,7 +1,7 @@
 apiVersion: 1
 providers:
-  - name: NextGuard
-    folder: NextGuard
+  - name: SapIT Alerts
+    folder: SapIT Alerts
     type: file
     disableDeletion: true
     options:

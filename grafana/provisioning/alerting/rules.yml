@@ -2,8 +2,8 @@
 apiVersion: 1
 groups:
 - orgId: 1
-  name: nextguard
-  folder: NextGuard
+  name: sapit-alerts
+  folder: SapIT Alerts
   interval: 1m
   rules:
   - uid: ng-temp-alta
@@ -55,7 +55,7 @@ groups:
     for: 5m
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'Temperatura > 35 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
   - uid: ng-temp-baja
@@ -107,7 +107,7 @@ groups:
     for: 5m
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'Temperatura < 10 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
   - uid: ng-hum-alta
@@ -159,7 +159,7 @@ groups:
     for: 5m
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'Humedad > 80 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %'
   - uid: ng-hum-baja
@@ -211,7 +211,7 @@ groups:
     for: 5m
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'Humedad < 20 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %'
   - uid: ng-co2-elevado
@@ -263,7 +263,7 @@ groups:
     for: 5m
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'CO₂ eq. > 1000 ppm en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} ppm'
   - uid: ng-co2-critico
@@ -315,7 +315,7 @@ groups:
     for: 2m
     labels:
       severidad: critical
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'CO₂ eq. > 2000 ppm en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} ppm'
   - uid: ng-temp-salto
@@ -367,7 +367,7 @@ groups:
     for: 0s
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'Variación > 8 °C en 5 min en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C'
   - uid: ng-sensor-caido
@@ -420,7 +420,7 @@ groups:
     for: 0s
     labels:
       severidad: critical
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: '{{ $labels.sensor }} ({{ $labels.cliente }}) no reporta hace {{ $values.B }} s'
   - uid: ng-mq135-saturado
@@ -473,7 +473,7 @@ groups:
     for: 10m
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'ADC del MQ135 fuera de rango útil en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }}. Revisar divisor 47k/47k, AO (no DO) y GND común'
   - uid: ng-mq135-estado
@@ -525,7 +525,7 @@ groups:
     for: 5m
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: El firmware reporta mq135_estado={{ $values.B }} en {{ $labels.sensor }} ({{ $labels.cliente }}) (1 saturado, 2 sin señal)
   - uid: ng-mq135-congelado
@@ -577,7 +577,7 @@ groups:
     for: 0s
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'El ADC del MQ135 no varía en 30 min en {{ $labels.sensor }} ({{ $labels.cliente }}): posible sensor atascado o desconectado'
   - uid: ng-wifi-debil
@@ -629,7 +629,7 @@ groups:
     for: 10m
     labels:
       severidad: info
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'RSSI {{ $values.B }} dBm en {{ $labels.sensor }} ({{ $labels.cliente }}): acercar al router'
   - uid: ng-reinicios
@@ -681,7 +681,7 @@ groups:
     for: 0s
     labels:
       severidad: info
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: '{{ $labels.sensor }} ({{ $labels.cliente }}) se reinició {{ $values.B }} veces en la última hora'
   - uid: ng-dht-falla
@@ -770,7 +770,7 @@ groups:
     for: 2m
     labels:
       severidad: warning
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: '{{ $labels.sensor }} ({{ $labels.cliente }}) reporta pero sin temperatura hace {{ $values.C }} s: revisar DHT11 y su pin de datos'
   - uid: ng-sin-ingesta
@@ -822,6 +822,6 @@ groups:
     for: 0s
     labels:
       severidad: critical
-      proyecto: nextguard
+      proyecto: sapit-alerts
     annotations:
       summary: 'Ningún sensor ha enviado datos en 10 min: revisar API, EC2 e InfluxDB'

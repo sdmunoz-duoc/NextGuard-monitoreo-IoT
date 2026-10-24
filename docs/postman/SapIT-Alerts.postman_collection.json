@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "NextGuard · API de sensores",
-    "description": "Pruebas de la API (semana 12-13). Variables: baseUrl, apiKey, cliente. Ejecutar en orden con el Collection Runner; en el Runner use un retraso de ~1200 ms entre peticiones (InfluxDB 2.x tarda unas décimas de segundo en hacer visible una escritura). Por consola: npx newman run NextGuard.postman_collection.json --delay-request 1200",
+    "name": "SapIT Alerts · API de sensores",
+    "description": "Pruebas de la API (semana 12-13). Variables: baseUrl, apiKey, cliente. Ejecutar en orden con el Collection Runner; en el Runner use un retraso de ~1200 ms entre peticiones (InfluxDB 2.x tarda unas décimas de segundo en hacer visible una escritura). Por consola: npx newman run SapIT-Alerts.postman_collection.json --delay-request 1200",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
