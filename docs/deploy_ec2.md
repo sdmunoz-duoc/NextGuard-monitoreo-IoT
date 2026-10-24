@@ -1,4 +1,4 @@
-# Despliegue de NextGuard en AWS Learner Lab (una EC2 + Docker Compose)
+# Despliegue de SapIT Alerts en AWS Learner Lab (una EC2 + Docker Compose)
 
 Todo el sistema corre en **una sola instancia EC2**, con un contenedor por servicio:
 
@@ -12,7 +12,7 @@ Todo el sistema corre en **una sola instancia EC2**, con un contenedor por servi
 > El Learner Lab cambia entre cursos y sesiones: verifica en la consola de EC2 qué tipos de instancia están permitidos. Región habitual: `us-east-1`.
 
 ## 1. Seguridad de red
-Crea el Security Group `nextguard-sg` (AWS no admite nombres que empiecen por `sg-`):
+Crea el Security Group `sapit-alerts-sg` (AWS no admite nombres que empiecen por `sg-`):
 
 | Puerto | Origen | Motivo |
 |---|---|---|
@@ -25,7 +25,7 @@ Si tu IP pública cambia, SSH y Grafana dejan de responder: actualiza las reglas
 
 ## 2. Instancia EC2
 1. Lanza **t3.medium** (4 GB) con Amazon Linux 2023. Usa **t3.large** (8 GB) si añades servicios o vas a hacer las pruebas de carga `IT-NFR-04`. Disco de 20 GB gp3.
-2. SG `nextguard-sg`, par de claves del laboratorio (`vockey` o uno propio).
+2. SG `sapit-alerts-sg`, par de claves del laboratorio (`vockey` o uno propio).
 3. Asocia una **Elastic IP** si está permitida (si no, la IP cambia en cada sesión y hay que cambiar el servidor en el portal cautivo del ESP32).
 
 ## 3. Instalar Docker
@@ -49,8 +49,8 @@ docker compose version
 
 ## 4. Levantar el stack
 ```bash
-git clone https://github.com/sdmunoz-duoc/NextGuard-monitoreo-IoT.git
-cd NextGuard-monitoreo-IoT
+git clone https://github.com/sdmunoz-duoc/SapIT-Alerts.git
+cd SapIT-Alerts
 cp .env.example .env && nano .env      # contraseñas, API_KEYS y clave de Grafana
 docker compose up -d --build
 docker compose ps                      # api, influxdb y postgres deben aparecer healthy
@@ -59,7 +59,7 @@ Genera claves fuertes con `python3 -c "import secrets;print(secrets.token_urlsaf
 
 - **PostgreSQL** aplica `db/init.sql` (clientes, sensores, alertas y marcas de seq) **una sola vez**, al inicializar el volumen `pg-data`.
 - **InfluxDB** crea la organización `duoc` y el bucket `sensores` y ejecuta `db/influx-init.sh`, que genera dos tokens con privilegios mínimos: uno de lectura y escritura para la API y uno de **solo lectura** para Grafana. Cada uno queda en su propio volumen y nunca se escribe en el repositorio.
-- **Grafana** carga el datasource InfluxDB (Flux, con el token de solo lectura) y el dashboard «NextGuard · Monitoreo IoT» sin pasos manuales.
+- **Grafana** carga el datasource InfluxDB (Flux, con el token de solo lectura) y el dashboard «SapIT Alerts · Monitoreo IoT» sin pasos manuales.
 - Todos los contenedores usan `restart: unless-stopped`; los datos viven en los volúmenes `influx-data`, `pg-data` y `grafana-data`.
 
 > **Si vienes de la versión anterior** (lecturas en PostgreSQL) los volúmenes antiguos son incompatibles: baja el stack con `docker compose down -v` (borra los datos de prueba) y vuelve a levantarlo.

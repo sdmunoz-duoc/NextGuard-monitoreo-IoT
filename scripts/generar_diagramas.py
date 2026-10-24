@@ -139,7 +139,7 @@ def arquitectura():
     s.rect(530, 50, 514, 360, "zone")
     s.text(546, 72, "AWS LEARNER LAB · VPC", "tz", "start")
     s.rect(542, 86, 494, 304, "sg")
-    s.text(556, 104, "EC2 · t3.medium · docker compose · nextguard-sg", "tz", "start")
+    s.text(556, 104, "EC2 · t3.medium · docker compose · sapit-alerts-sg", "tz", "start")
 
     s.box(36, 130, 110, 80, "Sensores", ["DHT11 · GPIO4", "MQ135 · GPIO34"])
     s.box(180, 130, 130, 80, "ESP32", ["portal cautivo", "cola · NTP · reintentos"], "box acc")
@@ -357,7 +357,7 @@ def despliegue():
     s.rect(320, 50, 720, 330, "zone")
     s.text(336, 72, "VPC DEL LABORATORIO · us-east-1 / us-west-2", "tz", "start")
     s.rect(350, 90, 670, 230, "sg")
-    s.text(364, 108, "nextguard-sg · EC2 t3.medium (t3.large si se añaden servicios) · Amazon Linux 2023 · docker compose", "tz", "start")
+    s.text(364, 108, "sapit-alerts-sg · EC2 t3.medium (t3.large si se añaden servicios) · Amazon Linux 2023 · docker compose", "tz", "start")
 
     s.box(366, 130, 148, 100, "api", ["FastAPI · uvicorn", "TCP 8000 · 512 MB"], "box acc")
     s.box(530, 130, 148, 100, "grafana", ["grafana 11.3", "TCP 3000 · token lectura"], "box acc")
@@ -380,8 +380,8 @@ def despliegue():
 
     s.rect(20, 410, 1020, 90, "box")
     s.text(36, 430, "REGLAS DE ENTRADA", "tz", "start")
-    s.text(36, 450, "nextguard-sg  ←  TCP 8000  desde 0.0.0.0/0 (o solo la IP pública de tu WiFi, más estricto)  ·  TCP 3000  solo desde «Mi IP» (/32)", "t", "start")
-    s.text(36, 468, "nextguard-sg  ←  TCP 22  solo desde «Mi IP» (/32); si tu IP pública cambia, actualiza las reglas 22 y 3000", "t", "start")
+    s.text(36, 450, "sapit-alerts-sg  ←  TCP 8000  desde 0.0.0.0/0 (o solo la IP pública de tu WiFi, más estricto)  ·  TCP 3000  solo desde «Mi IP» (/32)", "t", "start")
+    s.text(36, 468, "sapit-alerts-sg  ←  TCP 22  solo desde «Mi IP» (/32); si tu IP pública cambia, actualiza las reglas 22 y 3000", "t", "start")
     s.text(36, 486, "TCP 8086 (InfluxDB) y 5432 (PostgreSQL): sin regla de entrada y sin puerto publicado en compose: solo existen dentro de la red docker", "t", "start")
 
     pagina("despliegue_aws.html", "Despliegue en AWS",

@@ -17,6 +17,6 @@ crear() {  # crear <descripcion> <destino> <permisos...>
   chmod 644 "$destino/token"
 }
 
-crear "nextguard-api (lectura+escritura)" /tokens-api --read-bucket "$BUCKET_ID" --write-bucket "$BUCKET_ID"
-crear "nextguard-grafana (solo lectura)" /tokens-grafana --read-bucket "$BUCKET_ID"
+crear "sapit-alerts-api (lectura+escritura)" /tokens-api --read-bucket "$BUCKET_ID" --write-bucket "$BUCKET_ID"
+crear "sapit-alerts-grafana (solo lectura)" /tokens-grafana --read-bucket "$BUCKET_ID"
 echo "Tokens de la API y de Grafana creados."

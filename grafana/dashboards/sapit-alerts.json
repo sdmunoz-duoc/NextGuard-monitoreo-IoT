@@ -1,6 +1,6 @@
 {
-  "uid": "nextguard-main",
-  "title": "NextGuard · Monitoreo IoT",
+  "uid": "sapit-alerts-main",
+  "title": "SapIT Alerts · Monitoreo IoT",
   "schemaVersion": 39,
   "version": 2,
   "refresh": "30s",
@@ -10,7 +10,7 @@
     "to": "now"
   },
   "tags": [
-    "nextguard"
+    "sapit-alerts"
   ],
   "panels": [
     {
@@ -371,7 +371,7 @@
         "sortOrder": 1,
         "dashboardAlerts": false,
         "alertName": "",
-        "alertInstanceLabelFilter": "{proyecto=\"nextguard\"}",
+        "alertInstanceLabelFilter": "{proyecto=\"sapit-alerts\"}",
         "stateFilter": {
           "firing": true,
           "pending": true,

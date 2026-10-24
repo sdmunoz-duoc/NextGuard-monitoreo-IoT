@@ -1,7 +1,7 @@
-# NextGuard: sensor -> API -> InfluxDB (lecturas) + PostgreSQL (clientes, sensores, alertas) -> Grafana.
+# SapIT Alerts: sensor -> API -> InfluxDB (lecturas) + PostgreSQL (clientes, sensores, alertas) -> Grafana.
 # Un contenedor por servicio. Solo la API (:8000) y Grafana (:3000) se publican; las bases quedan dentro.
 # Uso:  cp .env.example .env && editar claves && docker compose up -d --build
-name: nextguard
+name: sapit-alerts
 
 x-tz: &utc
   TZ: UTC
@@ -83,14 +83,14 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?definir en .env}
       GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/nextguard.json
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/sapit-alerts.json
       # Correo para las alertas (si GF_SMTP_ENABLED=false las reglas evalúan igual, pero no se envía correo)
       GF_SMTP_ENABLED: ${GF_SMTP_ENABLED:-false}
       GF_SMTP_HOST: ${GF_SMTP_HOST:-smtp.gmail.com:587}
       GF_SMTP_USER: ${GF_SMTP_USER:-}
       GF_SMTP_PASSWORD: ${GF_SMTP_PASSWORD:-}
-      GF_SMTP_FROM_ADDRESS: ${GF_SMTP_FROM_ADDRESS:-nextguard@example.com}
-      GF_SMTP_FROM_NAME: NextGuard
+      GF_SMTP_FROM_ADDRESS: ${GF_SMTP_FROM_ADDRESS:-sapit-alerts@example.com}
+      GF_SMTP_FROM_NAME: SapIT Alerts
       ALERTA_DESTINATARIOS: ${ALERTA_DESTINATARIOS:-nadie@example.com}
     volumes:
       - grafana-data:/var/lib/grafana

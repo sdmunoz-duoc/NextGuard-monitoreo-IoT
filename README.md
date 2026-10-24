@@ -1,4 +1,4 @@
-# NextGuard · Monitoreo IoT
+# SapIT Alerts · Monitoreo IoT
 
 Red de sensores ambientales: **ESP32 (DHT11 + MQ135) → API FastAPI → InfluxDB + PostgreSQL → Grafana**, desplegada en una sola instancia EC2 (AWS Learner Lab) con un contenedor Docker por servicio. Sigue la arquitectura de la clase «Del sensor a Grafana» (SIY6122) e incluye el plan de pruebas de integración completo (108 casos, 55 pruebas automatizadas).
 
@@ -18,7 +18,7 @@ Las bases de datos no publican puertos: solo la API (:8000) y Grafana (:3000) se
 | `docker-compose.yml`, `.env.example` | Stack completo (copiar `.env.example` a `.env`) |
 | `api/` | API FastAPI y `Dockerfile` |
 | `db/` | `init.sql` (PostgreSQL) e `influx-init.sh` (tokens de InfluxDB con privilegios mínimos) |
-| `grafana/` | Datasource InfluxDB (Flux) y dashboard «NextGuard · Monitoreo IoT» aprovisionados |
+| `grafana/` | Datasource InfluxDB (Flux) y dashboard «SapIT Alerts · Monitoreo IoT» aprovisionados |
 | `firmware/esp32_envio/` | Sketch de envío: portal cautivo, DHT11, MQ135, cola y reintentos (`config.h.example`) |
 | `firmware/wifi_diagnostico/` | Escaneo WiFi y motivo de desconexión |
 | `tests/` | Suite pytest (contrato, validaciones, idempotencia, seguridad, carga ligera, integración con InfluxDB) |
@@ -34,7 +34,7 @@ docker compose ps             # api, influxdb y postgres: healthy
 ```
 
 - API: <http://localhost:8000/health>
-- Grafana: <http://localhost:3000> (usuario y clave de `.env`), dashboard **NextGuard · Monitoreo IoT**
+- Grafana: <http://localhost:3000> (usuario y clave de `.env`), dashboard **SapIT Alerts · Monitoreo IoT**
 
 Registra un cliente y genera datos de prueba:
 
