@@ -2,7 +2,7 @@
 
 > Generado desde `scripts/casos_de_prueba.py` (fuente única). Para registrar resultados usa `casos_de_prueba.xlsx` (columnas *Estado*, *Resultado real*, *Evidencia*).
 
-**Total:** 108 casos — 50 automatizados (pytest), 19 semi-automáticos, 39 manuales.
+**Total:** 110 casos — 52 automatizados (pytest), 19 semi-automáticos, 39 manuales.
 
 **Tipo:** A = automatizado · S = semi-automático (script/simulador + revisión) · M = manual. **Prioridad:** Alta = bloquea la aceptación; Media = debe cumplirse; Baja = deseable.
 
@@ -13,7 +13,7 @@
 | N0 | Entorno AWS y Docker | 8 | 7 | 0 | 3 | 5 |
 | N1 | Sensor ↔ ESP32 | 10 | 4 | 0 | 0 | 10 |
 | N2 | ESP32 ↔ Red WiFi / NTP | 8 | 3 | 0 | 0 | 8 |
-| N2 | ESP32 ↔ API (contrato HTTP) | 32 | 14 | 28 | 0 | 4 |
+| N2 | ESP32 ↔ API (contrato HTTP) | 34 | 14 | 30 | 0 | 4 |
 | N3 | API ↔ Base de datos | 18 | 11 | 12 | 5 | 1 |
 | N4 | Extremo a extremo | 12 | 8 | 1 | 6 | 5 |
 | N5 | No funcionales | 9 | 4 | 2 | 3 | 4 |
@@ -26,7 +26,7 @@
 | RF-01 | El sistema mide temperatura y humedad con el sensor conectado al ESP32. | IT-SEN-01, IT-SEN-03, IT-SEN-04, IT-SEN-05, IT-SEN-06 |
 | RF-02 | El ESP32 se conecta a la red WiFi y recupera la conexión tras una caída. | IT-NET-01, IT-NET-02, IT-NET-03, IT-NET-08 |
 | RF-03 | El ESP32 envía cada lectura a la API en JSON, autenticado con API key. | IT-ENV-02, IT-API-18, IT-API-22, IT-DB-17 |
-| RF-04 | La API valida el contenido y persiste las lecturas en InfluxDB (series de tiempo) y la configuración en PostgreSQL. | IT-ENV-04, IT-API-01, IT-API-05, IT-API-07, IT-API-08, IT-API-10, IT-API-24, IT-API-28, IT-DB-01, IT-DB-05, IT-DB-06, IT-DB-07, IT-DB-10, IT-DB-14, IT-DB-15, IT-E2E-02 |
+| RF-04 | La API valida el contenido y persiste las lecturas en InfluxDB (series de tiempo) y la configuración en PostgreSQL. | IT-ENV-04, IT-API-01, IT-API-05, IT-API-07, IT-API-08, IT-API-10, IT-API-24, IT-API-28, IT-API-33, IT-API-34, IT-DB-01, IT-DB-05, IT-DB-06, IT-DB-07, IT-DB-10, IT-DB-14, IT-DB-15, IT-E2E-02 |
 | RF-05 | No se pierden ni se duplican lecturas ante reintentos, cortes o reinicios. | IT-SEN-02, IT-SEN-09, IT-API-02, IT-API-12, IT-API-19, IT-API-20, IT-DB-02, IT-DB-03, IT-DB-16, IT-E2E-01, IT-E2E-03, IT-E2E-04, IT-NFR-02, IT-NFR-08 |
 | RF-06 | Las lecturas pueden consultarse por cliente, sensor y rango de tiempo. | IT-API-14, IT-API-15, IT-API-32, IT-E2E-06 |
 | RF-07 | Se pueden agregar nuevas magnitudes (p. ej. PM2.5) sin cambiar el esquema. | IT-DB-04, IT-E2E-07 |
@@ -652,6 +652,29 @@
 - **Datos:** —
 - **Resultado esperado:** 200 con 2 lecturas.
 - **Automatización:** `tests/test_api_contrato.py::test_it_api_32_lecturas_de_un_sensor_por_cliente`
+
+### IT-API-33 — Punto de rocío derivado (Magnus-Tetens)
+
+- **Requisito:** RF-04 · **Prioridad:** Media · **Tipo:** Automatizado (pytest)
+- **Precondiciones:** —
+- **Pasos:**
+  1. POST con temperatura 25 °C y humedad 60 %
+  2. GET de la lectura
+- **Datos:** a=17,62; b=243,12 °C
+- **Resultado esperado:** La lectura incluye punto_rocio ≈ 16,7 °C (±0,1).
+- **Automatización:** `tests/test_api_contrato.py::test_it_api_33_punto_de_rocio_derivado_magnus_tetens`
+
+### IT-API-34 — Punto de rocío no se deriva sin datos ni se duplica
+
+- **Requisito:** RF-04 · **Prioridad:** Baja · **Tipo:** Automatizado (pytest)
+- **Precondiciones:** —
+- **Pasos:**
+  1. POST solo con temperatura
+  2. POST con humedad 0 %
+  3. POST que ya trae punto_rocio
+- **Datos:** —
+- **Resultado esperado:** No se agrega punto_rocio en los dos primeros; en el tercero queda el valor del sensor.
+- **Automatización:** `tests/test_api_contrato.py::test_it_api_34_punto_de_rocio_no_se_deriva_sin_datos_o_si_ya_viene`
 
 
 ## N3 — API ↔ Base de datos

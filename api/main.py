@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session, sessionmaker  # noqa: E402
 from config import Settings  # noqa: E402
 from db import Base, make_engine  # noqa: E402
 from models import Cliente, LecturaVista, Sensor  # noqa: E402
+from psicrometria import punto_rocio  # noqa: E402
 from schemas import (ClienteIn, ClienteOut, ID_RE, LecturaIn, LecturaOut, LoteIn, RespuestaLectura,  # noqa: E402
                      RespuestaLote, SensorOut, a_utc)
 from store import Store, StoreError, crear_store  # noqa: E402
@@ -31,6 +32,7 @@ RANGOS = {
     "temperatura": (-40.0, 80.0),        # DHT11/DHT22
     "humedad": (0.0, 100.0),
     "co2_equiv": (300.0, 10000.0),       # MQ135 convertido a ppm de CO2 equivalente
+    "punto_rocio": (-80.0, 80.0),        # derivado en la API (Magnus-Tetens)
     "calidad_aire_mv": (0.0, 3300.0),    # MQ135 tras el divisor de tensión (diagnóstico)
     "calidad_aire_raw": (0.0, 4095.0),   # ADC de 12 bits
 }
@@ -102,6 +104,16 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
         if p.timestamp and p.timestamp - ahora > MAX_FUTURO:
             raise HTTPException(422, "'timestamp' está en el futuro")
 
+    def _con_derivadas(p: LecturaIn) -> list[tuple[str, float, str]]:
+        """Mediciones del envío más el punto de rocío si trae temperatura y humedad y no lo reporta el sensor."""
+        meds = [(m.tipo, m.valor, m.unidad) for m in p.lista_mediciones()]
+        v = {t: x for t, x, _ in meds}
+        if "punto_rocio" not in v and "temperatura" in v and "humedad" in v:
+            td = punto_rocio(v["temperatura"], v["humedad"])
+            if td is not None:
+                meds.append(("punto_rocio", round(td, 2), "C"))
+        return meds
+
     def _sensor(db: Session, p: LecturaIn) -> tuple[Sensor, bool]:
         if db.get(Cliente, p.cliente) is None:
             raise HTTPException(403, f"Cliente '{p.cliente}' no registrado")
@@ -144,7 +156,7 @@ def create_app(settings: Settings | None = None, store: Store | None = None) -> 
             return False, nuevo
         try:
             almacen.escribir(p.cliente, p.sensor, p.ubicacion or sensor.ubicacion,
-                             [(m.tipo, m.valor, m.unidad) for m in p.lista_mediciones()],
+                             _con_derivadas(p),
                              p.seq, p.rssi, p.timestamp, p.fw_version, ahora)
         except StoreError:
             if p.seq is not None:

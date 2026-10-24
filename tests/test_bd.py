@@ -11,7 +11,8 @@ URL = "/api/v1/lecturas"
 def test_it_db_01_guarda_lectura_con_todas_sus_mediciones(client):
     client.post(URL, json=payload(seq=1))
     lectura = client.get(URL).json()[0]
-    assert {m["tipo"]: m["valor"] for m in lectura["mediciones"]} == {"temperatura": 23.4, "humedad": 51.0}
+    v = {m["tipo"]: m["valor"] for m in lectura["mediciones"]}   # punto_rocio lo deriva la API
+    assert (v["temperatura"], v["humedad"]) == (23.4, 51.0) and set(v) == {"temperatura", "humedad", "punto_rocio"}
     assert lectura["seq"] == 1 and lectura["ubicacion"] == "Laboratorio"
 
 
@@ -36,7 +37,7 @@ def test_it_db_04_nueva_magnitud_sin_cambiar_esquema(client):
     p["mediciones"].append({"tipo": "co2_equiv", "valor": 840.0, "unidad": "ppm"})
     assert client.post(URL, json=p).status_code == 201
     tipos = {m["tipo"] for m in client.get(URL).json()[0]["mediciones"]}
-    assert tipos == {"temperatura", "humedad", "co2_equiv"}
+    assert tipos == {"temperatura", "humedad", "co2_equiv", "punto_rocio"}
 
 
 def test_it_db_05_borrar_cliente_elimina_sensores_y_marcas_en_cascada(client):
@@ -60,7 +61,7 @@ def test_it_db_07_valores_extremos_se_almacenan_sin_perdida(client):
                        {"tipo": "humedad", "valor": 100.0, "unidad": "%"}]
     client.post(URL, json=p)
     valores = {m["tipo"]: m["valor"] for m in client.get(URL).json()[0]["mediciones"]}
-    assert valores == {"temperatura": -40.0, "humedad": 100.0}
+    assert (valores["temperatura"], valores["humedad"]) == (-40.0, 100.0)
 
 
 def test_it_db_08_health_503_si_postgresql_no_responde(client_factory, tmp_path):
