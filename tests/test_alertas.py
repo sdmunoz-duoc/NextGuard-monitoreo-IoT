@@ -41,3 +41,13 @@ def test_it_e2e_09_politica_y_contact_point_de_correo():
     assert cp["contactPoints"][0]["receivers"][0]["type"] == "email"
     pol = yaml.safe_load((RAIZ / "policies.yml").read_text(encoding="utf-8"))
     assert pol["policies"][0]["receiver"] == cp["contactPoints"][0]["name"]
+
+
+def test_umbrales_estrictos_de_temperatura_y_humedad():
+    esperado = {"ng-temp-alta": ("gt", 30), "ng-temp-baja": ("lt", 15), "ng-hum-alta": ("gt", 70), "ng-hum-baja": ("lt", 30)}
+    por_uid = {r["uid"]: r for r in _reglas()}
+    for uid, (op, valor) in esperado.items():
+        r = por_uid[uid]
+        umbral = next(d for d in r["data"] if d["refId"] == "C")["model"]["conditions"][0]["evaluator"]
+        assert (umbral["type"], umbral["params"]) == (op, [valor]), uid
+        assert r["for"] == "3m", uid

@@ -63,14 +63,14 @@ def reglas() -> list[dict]:
                       para=para, sev=sev, resumen=resumen, nodata=nodata))
 
     # --- Magnitudes ---
-    umbral("ng-temp-alta", "Temperatura alta", serie("temperatura", "valor", "3m"), "gt", 35, "5m", "warning",
-           "Temperatura > 35 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C")
-    umbral("ng-temp-baja", "Temperatura baja", serie("temperatura", "valor", "3m"), "lt", 10, "5m", "warning",
-           "Temperatura < 10 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C")
-    umbral("ng-hum-alta", "Humedad alta", serie("humedad", "valor", "3m"), "gt", 80, "5m", "warning",
-           "Humedad > 80 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %")
-    umbral("ng-hum-baja", "Humedad baja", serie("humedad", "valor", "3m"), "lt", 20, "5m", "warning",
-           "Humedad < 20 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %")
+    umbral("ng-temp-alta", "Temperatura alta", serie("temperatura", "valor", "3m"), "gt", 30, "3m", "warning",
+           "Temperatura > 30 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C")
+    umbral("ng-temp-baja", "Temperatura baja", serie("temperatura", "valor", "3m"), "lt", 15, "3m", "warning",
+           "Temperatura < 15 °C en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} °C")
+    umbral("ng-hum-alta", "Humedad alta", serie("humedad", "valor", "3m"), "gt", 70, "3m", "warning",
+           "Humedad > 70 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %")
+    umbral("ng-hum-baja", "Humedad baja", serie("humedad", "valor", "3m"), "lt", 30, "3m", "warning",
+           "Humedad < 30 % en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} %")
     umbral("ng-co2-elevado", "CO₂ equivalente elevado", serie("co2_equiv", "valor", "3m"), "gt", 1000, "5m",
            "warning", "CO₂ eq. > 1000 ppm en {{ $labels.sensor }} ({{ $labels.cliente }}): {{ $values.B }} ppm")
     umbral("ng-co2-critico", "CO₂ equivalente crítico", serie("co2_equiv", "valor", "3m"), "gt", 2000, "2m",
