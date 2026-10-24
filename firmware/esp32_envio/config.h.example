@@ -11,7 +11,7 @@
 #define UBICACION_DEFECTO  "Laboratorio"
 #define CICLO_S_DEFECTO    10           // segundos entre lecturas (5 a 3600)
 #define FW_VERSION         "2.0.0"
-#define HTTP_TIMEOUT_MS    5000
+#define HTTP_TIMEOUT_MS    10000        // con HTTPS el handshake TLS del ESP32 puede pasar de 5 s
 
 // --- Sensores ---
 // USE_DHT: 0 = valores simulados (sin hardware), 1 = DHT real

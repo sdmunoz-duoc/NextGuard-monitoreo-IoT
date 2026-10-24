@@ -67,7 +67,9 @@ Muestra cola[COLA_MAX];
 int colaIni = 0, colaN = 0;
 uint32_t perdidas = 0;                   // muestras descartadas por cola llena o rechazo 4xx
 uint32_t seq = 0;
-Preferences prefs;
+Preferences prefs;                       // namespace "cfg": se abre y cierra en cada operación
+Preferences prefsSeq;                    // namespace "envio": abierto todo el tiempo (seq); objeto aparte, porque
+                                         // Preferences::begin() falla si ya hay un namespace abierto en el mismo objeto
 bool guardarPendiente = false;           // el formulario del portal se envió
 unsigned long ultMuestra = 0, ultWiFi = 0, proximoEnvio = 0, esperaEnvio = 2000, inicio = 0;
 int fallosWiFi = 0;
@@ -350,6 +352,14 @@ int postJson(const char *path, const String &body) {
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-API-Key", cfg.apiKey);
   int code = http.POST(body);            // <0 = error de red/timeout
+#if USE_HTTPS
+  if (code < 0) {
+    char e[100] = "";
+    client.lastError(e, sizeof(e));
+    Serial.printf("[API] diag: %s | tls='%s' | heap libre=%u mayor bloque=%u\n", http.errorToString(code).c_str(), e,
+                  (unsigned)ESP.getFreeHeap(), (unsigned)ESP.getMaxAllocHeap());
+  }
+#endif
   http.end();
   return code;
 }
@@ -415,9 +425,9 @@ void setup() {
   }
 
   cargarConfig();
-  prefs.begin("envio", false);
-  seq = prefs.getUInt("seq", 0) + SEQ_MARGEN;            // salta un margen: tras un reinicio no se reutilizan seq
-  prefs.putUInt("seq", seq);
+  prefsSeq.begin("envio", false);
+  seq = prefsSeq.getUInt("seq", 0) + SEQ_MARGEN;            // salta un margen: tras un reinicio no se reutilizan seq
+  prefsSeq.putUInt("seq", seq);
   Serial.printf("[SEQ] inicio en %lu\n", (unsigned long)seq);
 
 #if USE_DHT
@@ -446,7 +456,7 @@ void loop() {
       m.seq = seq++;
       m.ts = horaLista() ? time(nullptr) : 0;
       m.rssi = (int8_t)WiFi.RSSI();
-      if (seq % SEQ_MARGEN == 0) { prefs.putUInt("seq", seq); }
+      if (seq % SEQ_MARGEN == 0) { prefsSeq.putUInt("seq", seq); }
       encolar(m);
       Serial.printf("[MUESTRA] seq=%lu T=%.1f H=%.1f gas=%umV flags=%u cola=%d perdidas=%lu hora=%s\n",
                     (unsigned long)m.seq, m.temp, m.hum, m.mqMv, m.flags, colaN, (unsigned long)perdidas,
